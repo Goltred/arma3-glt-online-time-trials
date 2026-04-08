@@ -1,5 +1,9 @@
 build/
+.sconsign.dblite
 buildTools/
 docs/
 *.pbo
-@GLT_OnlineOperationalTrials/
+@GLT_OnlineTimeTrials/
+*.biprivatekey
+tools/build.local.json
+dist/

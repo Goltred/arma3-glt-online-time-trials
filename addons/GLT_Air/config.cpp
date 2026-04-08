@@ -9,7 +9,6 @@ class CfgPatches
             "GLT_Core",
             "A3_Structures_F_Training",
             "A3_Structures_F_Mil_Helipads",
-            "A3_Structures_F_Marka",
             "A3_Signs_F"
         };
         author = "Goltred";

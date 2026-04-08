@@ -1,4 +1,4 @@
 protocol = 1;
 publishedid = 0;
-name = "@GLT_OnlineOperationalTrials";
+name = "Online Time Trials";
 timestamp = 0;

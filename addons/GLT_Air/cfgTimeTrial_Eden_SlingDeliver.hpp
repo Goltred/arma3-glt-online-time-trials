@@ -17,7 +17,7 @@ class Attributes
         displayName = "Delivery Radius (m)";
         tooltip = "Cargo must be on the ground inside this circle (not on the hook). Four cones mark the radius.";
         property = "GLT_Trials_slingRadius_SlingDeliver_Property";
-        defaultValue = "(8)";
+        defaultValue = "(12)";
         expression = "_this setVariable ['GLT_Trials_slingRadius', _value, true]";
     };
 };

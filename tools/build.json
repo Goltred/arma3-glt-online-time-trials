@@ -2,5 +2,7 @@
     "addonsFolder": "addons",
     "excludePboSymlinks": [],
     "noBinarize": [],
-    "outputFolder": "@GLT_OnlineOperationalTrials/addons"
+    "outputFolder": "@GLT_OnlineTimeTrials/addons",
+    "keysFolder": "keys",
+    "signPrivateKey": "C:/Users/goltr/Documents/Repos/Arma3/Goltred.biprivatekey"
 }

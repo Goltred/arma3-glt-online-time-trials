@@ -9,7 +9,6 @@ class CfgPatches
             "cba_main",
             "A3_Structures_F_Training",
             "A3_Structures_F_Mil_Helipads",
-            "A3_Structures_F_Marka",
             "A3_Signs_F"
         };
         author = "Goltred";
@@ -20,7 +19,7 @@ class CfgEditorCategories
 {
     class GLT_Trials
     {
-        displayName = "Online Operational Trials";
+        displayName = "Online Time Trials";
         Priority = 0;
         side = 8;
     };
@@ -30,19 +29,19 @@ class CfgEditorSubcategories
 {
     class GLT_Trials_Config
     {
-        displayName = "Online Operational Trials - Config";
+        displayName = "Online Time Trials - Config";
     };
     class GLT_Trials_Trials
     {
-        displayName = "Online Operational Trials - Trials";
+        displayName = "Online Time Trials - Trials";
     };
     class GLT_Trials_Segments
     {
-        displayName = "Online Operational Trials - Segments";
+        displayName = "Online Time Trials - Segments";
     };
     class GLT_Trials_Terminals
     {
-        displayName = "Online Operational Trials - Terminals";
+        displayName = "Online Time Trials - Terminals";
     };
 };
 

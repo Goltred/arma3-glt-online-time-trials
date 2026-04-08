@@ -17,7 +17,7 @@ class Attributes
         displayName = "Land Radius (m)";
         tooltip = "Distance from the point to count as landing.";
         property = "GLT_Trials_landRadius_LandPoint_Property";
-        defaultValue = "(8)";
+        defaultValue = "(12)";
         expression = "_this setVariable ['GLT_Trials_landRadius', _value, true]";
     };
 

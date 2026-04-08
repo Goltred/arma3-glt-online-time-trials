@@ -1,0 +1,112 @@
+Online Time Trials — Steam Workshop description
+==================================================
+Paste the section below into the Workshop item description field.
+Steam uses BBCode: [h1], [h2], [b], [list], [*], [url=...]...[/url]
+
+--- BEGIN PASTE BELOW THIS LINE -----------------------------------------------
+
+[h1]Online Time Trials[/h1]
+
+[b]What this mod does[/b]
+Online Time Trials lets mission makers place helicopter time trials in any scenario (single player or multiplayer). Each trial is a course from a [b]Trial Start[/b] to a [b]Trial End[/b], with optional ordered [b]segments[/b] in between (gates, hovers, sling loads, destroy targets, and more). Pilots get in a helicopter, pick a trial, and the server tracks their run with timing, HUD feedback, and optional leaderboard persistence.
+
+[b]Requirements[/b]
+[list]
+[*]Community Base Addons ([url=https://steamcommunity.com/workshop/filedetails/?id=450814997]CBA_A3[/url]) — used for the default keyboard shortcut to open the trial menu.
+[/list]
+
+[IMAGE_PLACEHOLDER: Hero screenshot — pilot in a helicopter with the trial HUD or course visible; good first impression for the store page.]
+
+[h2]Creating a trial (overview)[/h2]
+In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for trials, segments, terminals).
+
+[list]
+[*]Place a [b]Trial Start[/b] and a [b]Trial End[/b].
+[*]Give them the same [b]Trial Id[/b] (e.g. [i]trial_1[/i]) so they link together.
+[*]On [b]Trial Start[/b], set a friendly [b]Trial Name[/b] (shown in menus/HUD).
+[*]Add any [b]segment[/b] modules you want; each must use the [b]same Trial Id[/b] and a [b]Segment Index[/b] — lower numbers run earlier in the course.
+[*]Optionally place the [b]Master[/b] object to control leaderboard persistence (profile vs reset each mission).
+[*]Optionally place [b]Terminal[/b] objects for a “Time Trials Terminal” screen (live runs / leaderboard) in-game.
+[/list]
+
+[IMAGE_PLACEHOLDER: Eden editor — Trial Start, Trial End, and one segment placed on the map with the mod’s helper icons visible.]
+
+[h2]Segments — what each type does[/h2]
+
+Each segment shares: [b]Trial Id[/b] (must match the trial), [b]Segment Index[/b] (order). [b]Destroy[/b] segments can be marked [b]Optional obstacle only[/b] — they spawn for the run but do not count as a waypoint and despawn when the run ends.
+
+[b]Cross Gate[/b]
+Fly through a vertical gate plane. Tuned with [b]Gate Radius[/b] (horizontal) and [b]Plane Cross Tolerance[/b] (how close you must be to the gate plane along its forward axis).
+
+[b]Hover Point[/b]
+Stay inside the hover zone for a set time while respecting altitude and (by default) hover. Attributes include [b]Alt Min / Alt Max[/b] (m above the marker), [b]Hover Duration[/b] (seconds), [b]Extra horizontal radius[/b] (m, added to the placed helper), and optional [b]helper light[/b] fade distances (full strength vs dimmest as you approach).
+
+[b]Land Point[/b]
+Land within [b]Land Radius[/b] and remain on the ground for [b]Stay Duration[/b] (seconds).
+
+[b]Sling Pickup[/b]
+Pick up sling cargo: set the [b]Cargo class[/b] (CfgVehicles classname spawned for the load). The framework ensures the cargo exists for the run.
+
+[b]Sling Deliver (Circle)[/b]
+Deliver the load on the ground inside a [b]Delivery Radius[/b] (circle). Visual cones mark the zone.
+
+[b]Sling Deliver (Rectangle)[/b]
+Deliver inside a rectangle aligned to the object: [b]Half Width[/b] and [b]Half Length[/b] (meters from center along the helper’s axes). Optional [b]corner light[/b] fade distances behave like the hover helper lights.
+
+[b]Destroy Target[/b]
+Destroy a spawned [b]Vehicle[/b] target. Options: [b]Spawn driver[/b], [b]Spawn gunner / commander[/b], [b]Crew side[/b], [b]Crew skill[/b]. Can be [b]Optional obstacle only[/b].
+
+[b]Destroy Infantry[/b]
+Destroy a spawned infantry [b]squad[/b]: [b]Infantry class[/b] (must be a Man class), [b]Unit count[/b], [b]Squad skill[/b]. Can be [b]Optional obstacle only[/b].
+
+[IMAGE_PLACEHOLDER: In-game — hover point with helper lights, or sling delivery zone with cones/smoke.]
+
+[h2]Limiting which helicopters can enter a trial[/h2]
+On [b]Trial Start[/b], use [b]Allowed Heli Classes (comma-separated)[/b].
+
+[list]
+[*][b]Leave empty[/b] — any helicopter class can run the trial.
+[*][b]List classnames[/b] — e.g. [i]B_Heli_Transport_01_F,PTF_UH1Y[/i] — only those types see the trial in the selector and are validated for the course.
+[/list]
+
+[h2]How the player starts a trial[/h2]
+[list]
+[*]Get in a [b]helicopter as pilot[/b].
+[*]Press [b]Shift + T[/b] (CBA keybind: “Time Trials - Select Trial”) to open the trial list, choose a trial, confirm with [b]OK[/b].
+[*]If you use [b]ACE3[/b], eligible helicopters get a [b]Time Trials[/b] self-interaction on the vehicle that opens the same flow.
+[*]Near a placed [b]Terminal[/b], use the scroll action [b]Time Trials Terminal[/b] for live/leaderboard views (separate from starting a run in the heli).
+[/list]
+
+If nothing appears: wait until trials have synced from the server; you must be [b]pilot[/b] of a [b]Helicopter[/b]; your heli type must be allowed for that trial.
+
+[IMAGE_PLACEHOLDER: Trial selection dialog (“Time Trials” list with OK / Cancel).]
+
+[h2]UI you will see during a run[/h2]
+[list]
+[*][b]Trial selector dialog[/b] — lists eligible trials by name; [b]OK[/b] starts the selected run, [b]Cancel[/b] closes.
+[*][b]HUD / Draw3D[/b] — timer and guidance while a run is active (driven by the client draw loop).
+[*][b]Hover progress[/b] — progress UI while completing a hover segment (progress bar / text in the HUD layer).
+[*][b]Sling delivery HUD[/b] — feedback while delivering in circle or rectangle zones.
+[*][b]Course helpers[/b] — gates, smoke, lights, and 3D/route hints tied to the active segment (visibility is managed during the run).
+[*][b]Terminal UI[/b] — structured screen with [b]Live[/b] vs [b]Leaderboard[/b] style views when using a placed terminal (if the mission includes one).
+[/list]
+
+[IMAGE_PLACEHOLDER: Split image or two screenshots — (1) timer/guidance HUD during a run, (2) terminal or leaderboard screen.]
+
+[h2]Tips for mission makers[/h2]
+[list]
+[*]Use a unique [b]Trial Id[/b] per course; duplicate ids on the same map will conflict.
+[*]Segment order is [b]Segment Index[/b] ascending — gaps are fine, but duplicates for the same trial can behave unpredictably.
+[*]Start/End zones support [b]Touch Method[/b] and [b]Touch Padding[/b] on the Eden objects for tighter or looser hull checks (see tooltips in Eden).
+[*]To share only the trial layout between missions, use Eden [b]custom compositions[/b] or copy the mod’s helper objects between missions on the same terrain.
+[/list]
+
+[b]Author:[/b] Goltred (Online Time Trials / GLT)
+
+--- END PASTE -----------------------------------------------------------------
+
+Notes for you (not for Steam)
+------------------------------
+- Replace [IMAGE_PLACEHOLDER: ...] with actual Steam media: upload images/video in the Workshop item and drag them into the description where Steam allows, or delete those lines.
+- Shorten or expand any section to fit Steam’s style; keep BBCode balanced ([h1]...[/h1]).
+- Update “Requirements” if you publish a CUP-free or optional-ACE variant later.

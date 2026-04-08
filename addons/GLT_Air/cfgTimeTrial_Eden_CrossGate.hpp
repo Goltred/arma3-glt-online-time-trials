@@ -17,7 +17,7 @@ class Attributes
         displayName = "Gate Radius (m)";
         tooltip = "When the heli passes through the gate within this horizontal radius, the segment completes.";
         property = "GLT_Trials_gateRadius_CrossGate_Property";
-        defaultValue = "(8)";
+        defaultValue = "(14)";
         expression = "_this setVariable ['GLT_Trials_gateRadius', _value, true]";
     };
 
