@@ -17,6 +17,7 @@ GLT_Trials_clientHudShown = true;
 GLT_Trials_clientRunSyncStarted = -1;
 // Until true, empty active list means "still syncing"; after true, empty means "run ended" (no false syncing).
 GLT_Trials_clientRunSyncedOnce = false;
+GLT_Trials_clientHudSpectator = false;
 
 true
 

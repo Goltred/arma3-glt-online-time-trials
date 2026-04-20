@@ -19,7 +19,13 @@ private _runEndSignals = [];
 private _remaining = [];
 {
     private _run = _x;
-    private _finished = [_run, _now] call GLT_Trials_fnc_updateRunState;
+    private _finished = false;
+    if (_run getOrDefault ["pilotCancelRequested", false]) then {
+        _run set ["didFinish", false];
+        _finished = true;
+    } else {
+        _finished = [_run, _now] call GLT_Trials_fnc_updateRunState;
+    };
 
     if (_finished) then {
         // Finished run: finalize leaderboard and skip from active list.
@@ -228,6 +234,7 @@ private _remaining = [];
             // Index 19 = viz bundle for client cones/lights (see fn_syncSlingDeliverVisuals).
             // Index 20 = netId of trial sling cargo (for client HUD), or "".
             // Index 21 = active destroy target position ASL for red smoke ([] when N/A).
+            // Index 22 = netId of trial helicopter (for MP crew/passenger HUD sync), or "".
             private _slingLightState = -1;
             private _slingViz = -1;
             private _destroySmokePos = [];
@@ -319,6 +326,12 @@ private _remaining = [];
                 _slingCargoNetId = netId (_run getOrDefault ["slingCargoObj", objNull]);
             };
 
+            private _trialHeliNetId = "";
+            private _trialHeli = _run get "heli";
+            if (!isNull _trialHeli) then {
+                _trialHeliNetId = netId _trialHeli;
+            };
+
             _activePublic pushBack [
                 _run get "runId",
                 _run get "pilotUID",
@@ -341,7 +354,8 @@ private _remaining = [];
                 _slingLightState,
                 _slingViz,
                 _slingCargoNetId,
-                _destroySmokePos
+                _destroySmokePos,
+                _trialHeliNetId
             ];
         };
     };

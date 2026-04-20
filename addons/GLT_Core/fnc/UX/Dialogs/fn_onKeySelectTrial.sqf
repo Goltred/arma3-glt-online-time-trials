@@ -34,9 +34,26 @@ private _eligible = [];
     };
 } forEach GLT_Trials_trials;
 
+private _row = [] call GLT_Trials_fnc_resolveClientHudRun;
+private _myUid = getPlayerUID player;
+private _activeHere = false;
+if ((count _row) > 0 && { (_row select 1) isEqualTo _myUid }) then {
+    private _rn = _row param [22, ""];
+    if (_rn isNotEqualTo "") then {
+        _activeHere = _rn isEqualTo (netId _veh);
+    } else {
+        private _ridRow = parseNumber (str (_row select 0));
+        private _ridClient = if (isNil "GLT_Trials_clientRunId") then { -1 } else { parseNumber (str GLT_Trials_clientRunId) };
+        _activeHere = (_ridRow >= 0) && { _ridRow isEqualTo _ridClient };
+    };
+};
+
+if (_activeHere) exitWith {
+    [_veh, _eligible, _row] call GLT_Trials_fnc_openTrialMenu;
+};
+
 if (count _eligible isEqualTo 0) exitWith {
     hintSilent "Time Trials: no trials available for this helicopter.";
 };
 
 [_veh, _eligible] call GLT_Trials_fnc_openTrialMenu;
-

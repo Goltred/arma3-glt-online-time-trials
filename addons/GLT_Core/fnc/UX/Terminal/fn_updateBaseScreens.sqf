@@ -18,17 +18,7 @@ if (isNil "GLT_Trials_recentRunsPublic") exitWith {};
 
 private _myUID = getPlayerUID player;
 private _myRunId = parseNumber (str GLT_Trials_clientRunId);
-
-private _myRunCandidates = GLT_Trials_activeRunsPublic select {
-    parseNumber (str (_x select 0)) isEqualTo _myRunId
-};
-// activeRunsPublic entries are arrays (run state), not objects.
-private _myRun = if (count _myRunCandidates > 0) then { _myRunCandidates select 0 } else { [] };
-if ((count _myRun) isEqualTo 0) then {
-    // Fallback: if runId not yet replicated, try by UID
-    private _uidCandidates = GLT_Trials_activeRunsPublic select { (_x select 1) isEqualTo _myUID };
-    _myRun = if (count _uidCandidates > 0) then { _uidCandidates select 0 } else { [] };
-};
+private _myRun = [] call GLT_Trials_fnc_resolveClientHudRun;
 
 private _screenATop = "<t size='1.1' color='#00e5ff'>Trials</t><br/>";
 
@@ -80,11 +70,12 @@ if ((count _myRun) isEqualTo 0) then {
 
         private _completed = false;
         private _fromServer = false;
+        private _runPilotUid = GLT_Trials_lastSeenRunRow param [1, _myUID];
         if (!isNil "GLT_Trials_runEndBroadcast" && {(count GLT_Trials_runEndBroadcast) > 0}) then {
             private _sigIdx = GLT_Trials_runEndBroadcast findIf {
                 (count _x) >= 4
                 && {(parseNumber (str (_x select 0))) isEqualTo _lastRunId}
-                && {(_x select 1) isEqualTo _myUID}
+                && {(_x select 1) isEqualTo _runPilotUid}
             };
             if (_sigIdx >= 0) then {
                 (GLT_Trials_runEndBroadcast select _sigIdx) params ["_sigRunId", "_sigUid", "_sigDone", "_sigElapsed"];

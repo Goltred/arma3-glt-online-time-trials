@@ -4,7 +4,7 @@
     the current route step and the next two remain visible in 3D. Does not touch map markers.
 
     Server still toggles hideObjectGlobal via syncCourseObjectVisibility when a trial has any active run;
-    this layer applies hideObject (local only) for the participating pilot based on HUD run state.
+    this layer applies hideObject (local only) for the pilot and helicopter crew based on HUD run state.
 
     Important: local hideObject false overrides hideObjectGlobal true (BIKI). After a run finishes, the
     server hides the course globally; do not keep re-applying the last window (END leaves the end ring
@@ -78,17 +78,7 @@ if (isNil "GLT_Trials_activeRunsPublic") exitWith {
     };
 };
 
-private _myUID = getPlayerUID player;
-private _myRunId = _runIdN;
-
-private _myRunCandidates = GLT_Trials_activeRunsPublic select {
-    parseNumber (str (_x select 0)) isEqualTo _myRunId
-};
-private _myRun = if ((count _myRunCandidates) > 0) then { _myRunCandidates select 0 } else { [] };
-if ((count _myRun) isEqualTo 0) then {
-    private _uidCandidates = GLT_Trials_activeRunsPublic select { (_x select 1) isEqualTo _myUID };
-    _myRun = if ((count _uidCandidates) > 0) then { _uidCandidates select 0 } else { [] };
-};
+private _myRun = [] call GLT_Trials_fnc_resolveClientHudRun;
 
 if ((count _myRun) isEqualTo 0) exitWith {
     if (!_expectingRunRow) then {

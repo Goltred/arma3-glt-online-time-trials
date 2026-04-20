@@ -78,6 +78,7 @@ class CfgFunctions
         {
             file = "\z\GLT\addons\GLT_Core\fnc\Execution";
             class startRun {};
+            class requestCancelRun {};
             class updateRunState {};
             class tickServer {};
             class finishRun {};
@@ -120,6 +121,7 @@ class CfgFunctions
             class getHelperLightDimsFromObj {};
             class normalizeHelperLightDims {};
             class numberFromEden {};
+            class resolveClientHudRun {};
         };
 
         class UXDialogs
@@ -188,22 +190,47 @@ class CfgFunctions
 class RscText;
 class RscButton;
 class RscListbox;
+class RscStructuredText;
 
 class RscDisplayGLT_Trials_Selector
 {
     idd = 88000;
     movingEnable = 0;
     enableSimulation = 1;
-    onUnload = "missionNamespace setVariable ['GLT_Trials_trialVehicle', objNull]; missionNamespace setVariable ['GLT_Trials_trialEligible', []];";
+    onUnload = "missionNamespace setVariable ['GLT_Trials_trialVehicle', objNull]; missionNamespace setVariable ['GLT_Trials_trialEligible', []]; missionNamespace setVariable ['GLT_Trials_trialMenuActiveRow', []];";
 
     class controls
     {
+        class ActiveBackdrop: RscText
+        {
+            idc = 1010;
+            text = "";
+            // Title + list / summary only — buttons sit below so hover reads against the world
+            x = 0.26; y = 0.22;
+            w = 0.48; h = 0.405;
+            colorBackground[] = {0, 0, 0, 0.78};
+            show = 1;
+        };
+
         class Title: RscText
         {
             idc = 1000;
-            text = "Time Trials";
+            text = "";
             x = 0.3; y = 0.25;
             w = 0.4; h = 0.04;
+            colorText[] = {0.96, 0.96, 0.96, 1};
+            colorBackground[] = {0, 0, 0, 0};
+            shadow = 1;
+        };
+
+        class ActiveSummary: RscStructuredText
+        {
+            idc = 1001;
+            text = "";
+            x = 0.3; y = 0.30;
+            w = 0.4; h = 0.3;
+            show = 0;
+            colorBackground[] = {0, 0, 0, 0};
         };
 
         class TrialList: RscListbox
@@ -211,29 +238,57 @@ class RscDisplayGLT_Trials_Selector
             idc = 1500;
             x = 0.3; y = 0.30;
             w = 0.4; h = 0.3;
+            // Light list surface (inventory-style) over darker ListPanel + dim backdrop
+            colorBackground[] = {0.2, 0.2, 0.2, 1};
+            color[] = {0.95, 0.95, 0.95, 1};
         };
 
-        class OkButton: RscButton
+        class TrialButton: RscButton
+        {
+            colorBackground[] = {0.22, 0.22, 0.24, 0.95};
+            colorBackgroundActive[] = {0.3, 0.3, 0.33, 1};
+            colorBackgroundFocused[] = {0.22, 0.22, 0.24, 0.95};
+            colorFocused[] = {0.95, 0.95, 0.95, 1};
+            color[] = {0.95, 0.95, 0.95, 1};
+            colorActive[] = {1, 1, 1, 1};
+            // Base row is a template only (no idc): hide so RV does not spawn a stray button. Children override show.
+            show = 0;
+            // Vanilla CT_BUTTON can pulse text/background using period*; non-zero periodFocus reads as focus "blink".
+            period = 0;
+            periodFocus = 0;
+            periodOver = 0;
+        }
+
+        class OkButton: TrialButton
         {
             idc = 1600;
             text = "OK";
-            x = 0.3; y = 0.62;
+            x = 0.3; y = 0.665;
             w = 0.18; h = 0.04;
             action = "['OK'] call GLT_Trials_fnc_trialDialogButton;";
         };
 
-        class CancelButton: RscButton
+        class StopTrialButton: TrialButton
+        {
+            idc = 1602;
+            text = "Stop trial";
+            x = 0.3; y = 0.665;
+            w = 0.18; h = 0.04;
+            show = 0;
+            action = "['STOP'] call GLT_Trials_fnc_trialDialogButton;";
+        };
+
+        class CloseButton: TrialButton
         {
             idc = 1601;
-            text = "Cancel";
-            x = 0.52; y = 0.62;
+            text = "Close";
+            x = 0.52; y = 0.665;
             w = 0.18; h = 0.04;
             action = "['CANCEL'] call GLT_Trials_fnc_trialDialogButton;";
+            show = 1;
         };
     };
 };
-
-class RscStructuredText;
 
 class RscDisplayGLT_Trials_Terminal
 {

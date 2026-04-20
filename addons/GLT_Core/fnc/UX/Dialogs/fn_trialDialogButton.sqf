@@ -1,7 +1,7 @@
 /*
     GLT_Trials_fnc_trialDialogButton
-    Handles OK / CANCEL actions from the trial selection dialog.
-    Params: [_mode] where _mode is "OK" or "CANCEL".
+    Handles OK / CANCEL / STOP actions from the trial selection display (88000).
+    Params: [_mode] where _mode is "OK", "CANCEL", or "STOP".
 */
 
 params ["_mode"];
@@ -20,6 +20,15 @@ private _startRunLocal = {
     _r
 };
 
+private _requestCancelLocal = {
+    params ["_pl"];
+    if (isMultiplayer && {!isServer}) then {
+        [_pl] remoteExecCall ["GLT_Trials_fnc_requestCancelRun", 2];
+    } else {
+        [_pl] call GLT_Trials_fnc_requestCancelRun;
+    };
+};
+
 private _coerceRunId = {
     params ["_raw"];
     if (isNil "_raw") exitWith { -1 };
@@ -31,8 +40,23 @@ private _disp = findDisplay 88000;
 if (isNull _disp) exitWith {};
 
 if (_mode isEqualTo "CANCEL") exitWith {
-    [] call GLT_Trials_fnc_deleteTrialRouteMarkers;
-    closeDialog 0;
+    private _active = missionNamespace getVariable ["GLT_Trials_trialMenuActiveRow", []];
+    if (count _active isEqualTo 0) then {
+        [] call GLT_Trials_fnc_deleteTrialRouteMarkers;
+    };
+    _disp closeDisplay 0;
+};
+
+if (_mode isEqualTo "STOP") exitWith {
+    private _veh = missionNamespace getVariable ["GLT_Trials_trialVehicle", objNull];
+    if (isNull _veh) exitWith {
+        hintSilent "Time Trials: vehicle no longer available.";
+    };
+    if (driver _veh isNotEqualTo player) exitWith {
+        hintSilent "Time Trials: you must be the pilot.";
+    };
+    [player] call _requestCancelLocal;
+    _disp closeDisplay 0;
 };
 
 // OK button
@@ -54,7 +78,7 @@ if (isNull _veh) exitWith {
 
 // If we don't have the public trial summary yet, fall back to old behavior.
 if (isNil "GLT_Trials_trials") exitWith {
-    closeDialog 0;
+    _disp closeDisplay 0;
     private _runId = [_veh, _trialId, player] call _startRunLocal;
     private _runIdN = [_runId] call _coerceRunId;
     if (_runIdN >= 0) then { [_runIdN] call GLT_Trials_fnc_updateHud } else { hintSilent "Time Trials: could not start run."; };
@@ -73,14 +97,14 @@ private _startRadius = 0;
 
 // If we don't know start position/radius, fall back to old behavior.
 if (!(_startPos isEqualType []) || { count _startPos < 3 }) exitWith {
-    closeDialog 0;
+    _disp closeDisplay 0;
     private _runId = [_veh, _trialId, player] call _startRunLocal;
     private _runIdN = [_runId] call _coerceRunId;
     if (_runIdN >= 0) then { [_runIdN] call GLT_Trials_fnc_updateHud } else { hintSilent "Time Trials: could not start run."; };
 };
 
-// Close the dialog.
-closeDialog 0;
+// Close the overlay display.
+_disp closeDisplay 0;
 
 // Full route on map; start is active until server state arrives.
 private _mapRoute = [];

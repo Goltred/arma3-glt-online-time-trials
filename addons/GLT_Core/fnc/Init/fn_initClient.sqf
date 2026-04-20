@@ -28,6 +28,8 @@ GLT_Trials_clientHudShown = false;
 
 GLT_Trials_clientRunId = -1;
 GLT_Trials_clientRunSyncedOnce = false;
+GLT_Trials_clientHudSpectator = false;
+GLT_Trials_spectatorResolveMissFrames = 0;
 GLT_Trials_draw3D_eh = -1;
 
 // Ensure Draw3D handler is installed; it drives HUD + guidance markers.

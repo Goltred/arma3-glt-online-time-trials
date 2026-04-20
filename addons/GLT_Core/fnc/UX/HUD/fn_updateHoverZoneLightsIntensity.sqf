@@ -29,14 +29,7 @@ uiNamespace setVariable ["GLT_Trials_hoverLightIntLastT", time];
 // Red = in segment but not yet meeting hover cylinder / timer; green = server is accumulating hover (index 14).
 private _inHover = false;
 if !(isNil "GLT_Trials_activeRunsPublic") then {
-    private _myUID = getPlayerUID player;
-    private _myRunId = parseNumber (str GLT_Trials_clientRunId);
-    private _cand = GLT_Trials_activeRunsPublic select { parseNumber (str (_x select 0)) isEqualTo _myRunId };
-    private _myRun = if (count _cand > 0) then { _cand select 0 } else { [] };
-    if ((count _myRun) isEqualTo 0) then {
-        _cand = GLT_Trials_activeRunsPublic select { (_x select 1) isEqualTo _myUID };
-        _myRun = if (count _cand > 0) then { _cand select 0 } else { [] };
-    };
+    private _myRun = [] call GLT_Trials_fnc_resolveClientHudRun;
     if (
         (count _myRun) > 0
         && { (_myRun param [9, ""]) isEqualTo "HOVER_POINT" }

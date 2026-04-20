@@ -20,14 +20,7 @@ uiNamespace setVariable ["GLT_Trials_slingDeliverLightIntLastT", time];
 
 private _state = -1;
 if !(isNil "GLT_Trials_activeRunsPublic") then {
-    private _myUID = getPlayerUID player;
-    private _myRunId = parseNumber (str GLT_Trials_clientRunId);
-    private _cand = GLT_Trials_activeRunsPublic select { parseNumber (str (_x select 0)) isEqualTo _myRunId };
-    private _myRun = if (count _cand > 0) then { _cand select 0 } else { [] };
-    if ((count _myRun) isEqualTo 0) then {
-        _cand = GLT_Trials_activeRunsPublic select { (_x select 1) isEqualTo _myUID };
-        _myRun = if (count _cand > 0) then { _cand select 0 } else { [] };
-    };
+    private _myRun = [] call GLT_Trials_fnc_resolveClientHudRun;
     private _segT = _myRun param [9, ""];
     if ((count _myRun) > 0 && { _segT isEqualTo "SLING_DELIVER_RECT" || { _segT isEqualTo "SLING_DELIVER_CIRCLE" } }) then {
         _state = _myRun param [18, -1];
