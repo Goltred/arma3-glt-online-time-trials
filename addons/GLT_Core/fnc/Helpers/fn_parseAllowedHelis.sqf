@@ -1,6 +1,6 @@
 /*
     GLT_Trials_fnc_parseAllowedHelis
-    Parse Eden "allowed helis" attribute into array of classnames.
+    Parse Eden GLT_Trials_allowedHelis (vehicle class whitelist) into an array of classnames.
 
     Accepts:
       - "" or "[]" -> []

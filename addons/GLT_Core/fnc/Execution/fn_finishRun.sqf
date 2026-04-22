@@ -48,5 +48,7 @@ if (GLT_Trials_persistenceMode > 0) then {
     ["default", GLT_Trials_persistenceMode] call GLT_Trials_fnc_saveLeaderboard;
 };
 
+GLT_Trials_recentRunsDirty = true;
+
 // No return value.
 

@@ -1,6 +1,6 @@
 /*
     GLT_Trials_fnc_onVehicleEntered
-    Client-side: attach ACE "Time Trials" interaction to valid helicopters (when ACE is present).
+    Client-side: attach ACE "Time Trials" interaction to vehicles eligible for a trial (when ACE is present).
     Params: [_unit, _vehicle]
 */
 
@@ -8,6 +8,7 @@ params ["_unit", "_vehicle"];
 if (!hasInterface) exitWith {};
 if (isNull _vehicle) exitWith {};
 if (_unit isNotEqualTo player) exitWith {};
+if (!(missionNamespace getVariable ["GLT_Trials_trialsAvailable", false])) exitWith {};
 
 if (isNil "GLT_Trials_trials") exitWith {};
 private _heliType = typeOf _vehicle;
@@ -16,7 +17,9 @@ if (_heliType isEqualTo "") exitWith {};
 private _isAllowed = false;
 {
     private _allowedHelis = _x select 2;
-    if ((count _allowedHelis isEqualTo 0) || (_allowedHelis find _heliType >= 0)) exitWith { _isAllowed = true; };
+    private _catMask = _x param [9, []];
+    private _classOk = (count _allowedHelis isEqualTo 0) || (_allowedHelis find _heliType >= 0);
+    if (_classOk && {[_vehicle, _catMask] call GLT_Trials_fnc_vehicleMatchesTrialCategoryMask}) exitWith { _isAllowed = true; };
 } forEach GLT_Trials_trials;
 
 if (!(_isAllowed)) exitWith {};

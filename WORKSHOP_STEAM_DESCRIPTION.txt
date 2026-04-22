@@ -8,7 +8,7 @@ Steam uses BBCode: [h1], [h2], [b], [list], [*], [url=...]...[/url]
 [h1]Online Time Trials[/h1]
 
 [b]What this mod does[/b]
-Online Time Trials lets mission makers place helicopter time trials in any scenario (single player or multiplayer). Each trial is a course from a [b]Trial Start[/b] to a [b]Trial End[/b], with optional ordered [b]segments[/b] in between (gates, hovers, sling loads, destroy targets, and more). Pilots get in a helicopter, pick a trial, and the server tracks their run with timing, HUD feedback, and optional leaderboard persistence.
+Online Time Trials lets mission makers place helicopter time trials in any scenario (single player or multiplayer). Each trial is a course built from ordered [b]segment waypoints[/b] (gates, hovers, sling loads, destroy targets, and more) that share a [b]Trial Id[/b]. Pilots get in a helicopter, pick a trial, and the server tracks their run with timing, HUD feedback, and optional leaderboard persistence.
 
 [b]Requirements[/b]
 [list]
@@ -21,15 +21,13 @@ Online Time Trials lets mission makers place helicopter time trials in any scena
 In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for trials, segments, terminals).
 
 [list]
-[*]Place a [b]Trial Start[/b] and a [b]Trial End[/b].
-[*]Give them the same [b]Trial Id[/b] (e.g. [i]trial_1[/i]) so they link together.
-[*]On [b]Trial Start[/b], set a friendly [b]Trial Name[/b] (shown in menus/HUD).
-[*]Add any [b]segment[/b] modules you want; each must use the [b]same Trial Id[/b] and a [b]Segment Index[/b] — lower numbers run earlier in the course.
+[*]Place [b]segment[/b] modules (gates, hovers, etc.); each must use the same [b]Trial Id[/b] (e.g. [i]trial_1[/i]) and a [b]Segment Index[/b] — lower numbers run earlier in the course.
+[*]Optionally place a [b]Trial Definition[/b] helper (same [b]Trial Id[/b]) for friendly [b]Trial Name[/b], allowed vehicle classes, and vehicle-type checkboxes (heli/plane/ground/ship). It is removed when the mission runs so it does not appear in-game.
 [*]Optionally place the [b]Master[/b] object to control leaderboard persistence (profile vs reset each mission).
 [*]Optionally place [b]Terminal[/b] objects for a “Time Trials Terminal” screen (live runs / leaderboard) in-game.
 [/list]
 
-[IMAGE_PLACEHOLDER: Eden editor — Trial Start, Trial End, and one segment placed on the map with the mod’s helper icons visible.]
+[IMAGE_PLACEHOLDER: Eden editor — segment helpers placed on the map with the mod’s icons visible.]
 
 [h2]Segments — what each type does[/h2]
 

@@ -40,8 +40,8 @@ class Attributes
 
     class GLT_Trials_hoverRadiusExtra: GLT_Trials_Base_Number
     {
-        displayName = "Extra horizontal radius (m)";
-        tooltip = "Added to the size of the placed VR circle (2D distance to center). Positive = more lenient position; negative = tighter. Vertical limits are only Alt Min / Alt Max. Default 2.";
+        displayName = "Horizontal radius (m)";
+        tooltip = "Added to the size of the placed VR circle (2D distance to center). Positive = more lenient position; negative = tighter. Vertical limits are only Alt Min / Alt Max.";
         property = "GLT_Trials_hoverRadiusExtra_HoverPoint_Property";
         defaultValue = "(5)";
         expression = "_this setVariable ['GLT_Trials_hoverRadiusExtra', _value, true]";

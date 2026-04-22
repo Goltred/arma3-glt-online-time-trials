@@ -50,7 +50,7 @@ if (_activeIndex >= _n) then { _activeIndex = _n - 1 };
             _mName setMarkerSizeLocal [0.5, 0.5];
         };
 
-        // Map labels (cross gates: number only). Segment route index _i matches server _segIdx+1.
+        // Map labels: _i is 0-based segment index (same as server segmentIndex / HUD wpIndex); labels are 1-based in segmentWaypointLabel.
         private _text = [_kind, _i] call GLT_Trials_fnc_segmentWaypointLabel;
         _mName setMarkerTextLocal _text;
     };

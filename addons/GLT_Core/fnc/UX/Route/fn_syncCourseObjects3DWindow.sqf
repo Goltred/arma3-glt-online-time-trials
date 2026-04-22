@@ -3,14 +3,15 @@
     Client: locally hide course objects (start / gates / hover VR disc / land / sling helpers) so only
     the current route step and the next two remain visible in 3D. Does not touch map markers.
 
-    Server still toggles hideObjectGlobal via syncCourseObjectVisibility when a trial has any active run;
-    this layer applies hideObject (local only) for the pilot and helicopter crew based on HUD run state.
+    Server still toggles hideObjectGlobal via syncCourseObjectVisibilityFull / ForTrialIds when a trial has any active run;
+    this layer applies hideObject (local only) for the driver and vehicle crew based on HUD run state.
 
     Important: local hideObject false overrides hideObjectGlobal true (BIKI). After a run finishes, the
     server hides the course globally; do not keep re-applying the last window (END leaves the end ring
     with hideObject false) or that ring stays visible until local overrides are cleared.
 
-    Trial row GLT_Trials_trials index 8 = course object list; each object should have GLT_Trials_routeIndex (set
+    Trial row GLT_Trials_trials index 8 = course object list; index 9 = vehicle category mask (see registerTrial).
+    Each course object should have GLT_Trials_routeIndex (set
     at register time). Missing routeIndex => left visible (compat with older missions).
 
     Optional: missionNamespace GLT_Trials_timeTrialsShowFullCourse3D = true — disable windowing.
@@ -67,7 +68,7 @@ if (!GLT_Trials_clientHudShown) exitWith { call _resetLocal };
 
 // While HUD thinks we have a run, missing/empty public row is usually a short MP sync gap
 // (broadcast ~0.25s). Resetting here would hideObject false on everything for one frame — END
-// (outside WAIT_START window) flashes visible. Keep last frame's local visibility instead.
+// During brief empty activeRunsPublic, keep last frame's local visibility instead of flashing.
 private _runIdN = if (isNil "GLT_Trials_clientRunId") then { -1 } else { parseNumber (str GLT_Trials_clientRunId) };
 private _expectingRunRow = _runIdN >= 0;
 
@@ -132,16 +133,8 @@ private _segType = _myRun param [9, ""];
 private _wpIndex = _myRun param [10, 0];
 if !(_wpIndex isEqualType 0) then { _wpIndex = parseNumber (str _wpIndex) };
 
-private _activeR = 0;
-if (_segType isEqualTo "WAIT_START") then {
-    _activeR = 0;
-} else {
-    if (_segType isEqualTo "END") then {
-        _activeR = (count _route) - 1;
-    } else {
-        _activeR = 1 + _wpIndex;
-    };
-};
+// mapRoute is segment-only; route index matches HUD waypoint index.
+private _activeR = _wpIndex;
 
 if (_activeR < 0) then { _activeR = 0 };
 private _nR = count _route;

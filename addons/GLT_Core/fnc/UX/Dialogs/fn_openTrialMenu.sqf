@@ -2,12 +2,12 @@
     GLT_Trials_fnc_openTrialMenu
     Client-side trial selection UI (non-modal display on mission display 46).
     Params: [_vehicle, _eligibleTrials, _activeRow]
-        _vehicle: helicopter object
+        _vehicle: trial vehicle object
         _eligibleTrials: array of [trialId, trialName]
         _activeRow: optional public HUD row (see tickServer); non-empty => in-trial layout
 */
 
-params ["_vehicle", "_eligible", ["_activeRow", []]];
+params ["_vehicle", "_eligible", ["_activeRow", []], ["_openAttempt", 0]];
 if (!hasInterface) exitWith {};
 if (isNull _vehicle) exitWith {};
 if (isNil "_eligible") exitWith {};
@@ -18,8 +18,16 @@ if (!_activeMode && { count _eligible isEqualTo 0 }) exitWith {};
 // createDialog blocks player movement; createDisplay on 46 does not (BIKI createDisplay / GUI Tutorial).
 private _parent = findDisplay 46;
 if (isNull _parent) exitWith {
-    hintSilent "Time Trials: trial menu needs the in-game display (try again from the mission).";
+    if (_openAttempt > 0) exitWith {
+        hintSilent "Time Trials: trial menu needs the in-game display (try again from the mission).";
+    };
+    [_vehicle, _eligible, _activeRow, 1] spawn {
+        uiSleep 0;
+        params ["_v", "_e", "_a", "_at"];
+        [_v, _e, _a, _at] call GLT_Trials_fnc_openTrialMenu;
+    };
 };
+
 private _prev = findDisplay 88000;
 if (!isNull _prev) then { _prev closeDisplay 0; };
 
@@ -29,7 +37,14 @@ missionNamespace setVariable ["GLT_Trials_trialMenuActiveRow", if (_activeMode) 
 
 private _disp = _parent createDisplay "RscDisplayGLT_Trials_Selector";
 if (isNull _disp) exitWith {
-    hintSilent "Time Trials: could not open trial menu.";
+    if (_openAttempt > 0) exitWith {
+        hintSilent "Time Trials: could not open trial menu.";
+    };
+    [_vehicle, _eligible, _activeRow, 1] spawn {
+        uiSleep 0;
+        params ["_v", "_e", "_a", "_at"];
+        [_v, _e, _a, _at] call GLT_Trials_fnc_openTrialMenu;
+    };
 };
 
 private _ctrlBackdrop = _disp displayCtrl 1010;

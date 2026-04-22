@@ -4,8 +4,9 @@
 */
 
 if (!hasInterface) exitWith {};
+if (!(missionNamespace getVariable ["GLT_Trials_trialsAvailable", false])) exitWith { true };
 
-// MP: crew in the trial helicopter adopt the pilot's public run row (HUD, markers, smoke, 3D window).
+// MP: crew in the trial vehicle adopt the driver's public run row (HUD, markers, smoke, 3D window).
 private _resolvedRow = [] call GLT_Trials_fnc_resolveClientHudRun;
 private _onFoot = (vehicle player isEqualTo player);
 if ((count _resolvedRow) > 0) then {
@@ -29,7 +30,7 @@ if ((count _resolvedRow) > 0) then {
             if (_onFoot) then {
                 _dropSpectator = true;
             } else {
-                // In aircraft: tolerate brief empty activeRunsPublic between server broadcasts (~0.25s).
+                // In a vehicle: tolerate brief empty activeRunsPublic between server broadcasts (~0.25s).
                 GLT_Trials_spectatorResolveMissFrames = GLT_Trials_spectatorResolveMissFrames + 1;
                 if (GLT_Trials_spectatorResolveMissFrames > 45) then {
                     _dropSpectator = true;

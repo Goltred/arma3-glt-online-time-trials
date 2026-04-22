@@ -6,6 +6,7 @@
 
 params ["_now"];
 if (!isServer) exitWith {};
+if (!(missionNamespace getVariable ["GLT_Trials_trialsAvailable", false]) && { (count GLT_Trials_activeRunsPrivate) isEqualTo 0 }) exitWith { true };
 
 if (isNil "GLT_Trials_lastBroadcastTime") then {
     GLT_Trials_lastBroadcastTime = 0;
@@ -29,7 +30,7 @@ private _remaining = [];
 
     if (_finished) then {
         // Finished run: finalize leaderboard and skip from active list.
-        // updateRunState returns true also for abort cases (e.g., destroyed heli).
+        // updateRunState returns true also for abort cases (e.g., destroyed trial vehicle).
         // We only record leaderboard if this was a real finish (not an abort).
         private _completed = (_run get "didFinish") isEqualTo true;
         private _startTime = _run get "startTime";
@@ -67,56 +68,27 @@ private _remaining = [];
             private _startTime = _run get "startTime";
             private _nowElapsed = if (_startTime < 0) then {0} else { _now - _startTime };
 
-            // WAIT_START phase: segmentIndex < 0.
-            if (_segIdx < 0) then {
-                _segmentType = "WAIT_START";
-                _segmentPos = _trial select 3; // startPosWorld
-                _segmentDesc = "Fly through start";
-            } else { if (_segIdx < count _segments) then {
+            if (_segIdx < count _segments) then {
                 private _seg = _segments select _segIdx;
                 _segmentType = _seg select 0;
                 _segmentPos = _seg select 2;
 
                 switch (_segmentType) do {
                     case "CROSS_GATE": {
-                        private _r = _seg select 6;
-                        _segmentDesc = format ["Cross gate %1 (r=%2m)", _segIdx + 1, _r];
+                        _segmentDesc = format ["Fly through gate %1", _segIdx + 1];
                     };
                     case "HOVER_POINT": {
-                        private _r = _seg select 3;
-                        private _altMin = _seg select 4;
-                        private _altMax = _seg select 5;
-                        private _hoverSeconds = _seg select 6;
-                        _segmentDesc = format [
-                            "Hover at %1 — within %2m, %3–%4m above marker, %5s",
-                            _segIdx + 1,
-                            _r,
-                            _altMin,
-                            _altMax,
-                            _hoverSeconds
-                        ];
+                        _segmentDesc = format ["Hover above %1", _segIdx + 1];
                     };
                     case "LAND_POINT": {
-                        private _r = _seg select 3;
-                        private _staySeconds = _seg select 4;
-                        _segmentDesc = format [
-                            "Land %1 — on ground (touching), %2s within %3m",
-                            _segIdx + 1,
-                            _staySeconds,
-                            _r
-                        ];
+                        _segmentDesc = format ["Land at %1", _segIdx + 1];
                     };
                     case "SLING_PICKUP": {
-                        _segmentDesc = format ["Sling pickup %1 — hook cargo", _segIdx + 1];
+                        _segmentDesc = format ["Sling pickup %1", _segIdx + 1];
                     };
-                    case "SLING_DELIVER_CIRCLE": {
-                        private _r = _seg select 3;
-                        _segmentDesc = format ["Sling deliver %1 — circle r=%2m (drop in zone)", _segIdx + 1, _r];
-                    };
+                    case "SLING_DELIVER_CIRCLE";
                     case "SLING_DELIVER_RECT": {
-                        private _hw = _seg select 5;
-                        private _hl = _seg select 6;
-                        _segmentDesc = format ["Sling deliver %1 — rectangle %2×%3m (drop in zone)", _segIdx + 1, _hw * 2, _hl * 2];
+                        _segmentDesc = format ["Sling deliver %1", _segIdx + 1];
                     };
                     case "DESTROY_TARGET": {
                         private _disp = _seg select 7;
@@ -143,11 +115,13 @@ private _remaining = [];
                     default { _segmentDesc = "Segment"; };
                 };
             } else {
-                private _endCfg = _trial select 8; // [endPosWorld, endRadius, endNormal, endUp, endRight, ...]
-                _segmentType = "END";
-                _segmentPos = _endCfg select 0;
-                _segmentDesc = "Fly through end";
-            };
+                // segmentIndex out of range while run still listed — should not happen; show last segment.
+                if ((count _segments) > 0) then {
+                    private _segF = _segments select ((count _segments) - 1);
+                    _segmentType = _segF select 0;
+                    _segmentPos = _segF select 2;
+                    _segmentDesc = "Finalizing…";
+                };
             };
 
             // Hover / land progress bar (client): mission-time stamp when accumulating; -1 = not in zone.
@@ -182,37 +156,17 @@ private _remaining = [];
 
             private _grid = mapGridPosition (_run get "lastPosWorld");
 
-            // Waypoint info for HUD:
-            // - Waypoints are: each segment + final end zone => total = segmentsCount + 1
-            // - Current index starts at 0 for first segment, and equals segmentsCount when at END.
-            private _totalWaypoints = _segCount + 1;
+            // Waypoint info for HUD: one waypoint per segment (trial completes at the last).
+            private _totalWaypoints = _segCount max 1;
             private _wpIndex = 0;
-            if (_segmentType isEqualTo "END") then {
-                _wpIndex = _segCount;
-            } else {
-                if (_segIdx >= 0) then { _wpIndex = _segIdx };
-            };
+            if (_segIdx >= 0) then { _wpIndex = _segIdx };
 
             // Next waypoint position (for circle orientation on the client).
             private _nextPos = _segmentPos;
-            if (_segmentType isEqualTo "WAIT_START") then {
-                // Next objective: first segment if present, otherwise END.
-                if (_segCount > 0) then {
-                    _nextPos = (_segments select 0) select 2;
-                } else {
-                    _nextPos = (_trial select 8) select 0;
-                };
+            if ((_segIdx + 1) < count _segments) then {
+                _nextPos = (_segments select (_segIdx + 1)) select 2;
             } else {
-                if (_segmentType isEqualTo "END") then {
-                    // _nextPos already matches end (same as _segmentPos).
-                } else {
-                    // On a segment: next is following segment, or END if this is the last segment.
-                    if ((_segIdx + 1) < count _segments) then {
-                        _nextPos = (_segments select (_segIdx + 1)) select 2;
-                    } else {
-                        _nextPos = (_trial select 8) select 0;
-                    };
-                };
+                _nextPos = (_segments select _segIdx) select 2;
             };
 
             // Client hover helper lights (indices 16–17); -1 when not on HOVER_POINT.
@@ -234,7 +188,20 @@ private _remaining = [];
             // Index 19 = viz bundle for client cones/lights (see fn_syncSlingDeliverVisuals).
             // Index 20 = netId of trial sling cargo (for client HUD), or "".
             // Index 21 = active destroy target position ASL for red smoke ([] when N/A).
-            // Index 22 = netId of trial helicopter (for MP crew/passenger HUD sync), or "".
+            // Index 22 = netId of trial vehicle (for MP crew/passenger HUD sync), or "".
+            // Index 23 = horizontal radius (m) of current waypoint for HOVER_POINT / LAND_POINT (HUD distance ring); -1 if N/A.
+            private _segmentHorizRadius = -1;
+            if (
+                (_segmentType isEqualTo "HOVER_POINT" || {_segmentType isEqualTo "LAND_POINT"})
+                && {_segIdx >= 0}
+                && {_segIdx < count _segments}
+            ) then {
+                private _segZ = _segments select _segIdx;
+                if ((_segZ select 0) isEqualTo _segmentType) then {
+                    _segmentHorizRadius = _segZ select 3;
+                };
+            };
+
             private _slingLightState = -1;
             private _slingViz = -1;
             private _destroySmokePos = [];
@@ -355,7 +322,8 @@ private _remaining = [];
                 _slingViz,
                 _slingCargoNetId,
                 _destroySmokePos,
-                _trialHeliNetId
+                _trialHeliNetId,
+                _segmentHorizRadius
             ];
         };
     };
@@ -371,11 +339,34 @@ if ((count _runEndSignals) > 0) then {
 
 if ((_now - GLT_Trials_lastBroadcastTime) >= _broadcastInterval) then {
     publicVariable "GLT_Trials_activeRunsPublic";
-    publicVariable "GLT_Trials_recentRunsPublic";
+    if (GLT_Trials_recentRunsDirty) then {
+        publicVariable "GLT_Trials_recentRunsPublic";
+        GLT_Trials_recentRunsDirty = false;
+    };
     GLT_Trials_lastBroadcastTime = _now;
 };
 
-[] call GLT_Trials_fnc_syncCourseObjectVisibility;
+// Course visibility: only touch trials whose active-run membership changed (see syncCourseObjectVisibilityFull on register).
+if (!isNil "GLT_Trials_trials" && { (count GLT_Trials_trials) > 0 }) then {
+    private _nowTids = [];
+    {
+        _nowTids pushBackUnique (_x get "trialId");
+    } forEach GLT_Trials_activeRunsPrivate;
+
+    private _prev = GLT_Trials_courseVisLastActiveTids;
+    private _dirtyTids = [];
+    {
+        if (!(_x in _prev)) then { _dirtyTids pushBackUnique _x };
+    } forEach _nowTids;
+    {
+        if (!(_x in _nowTids)) then { _dirtyTids pushBackUnique _x };
+    } forEach _prev;
+
+    if ((count _dirtyTids) > 0) then {
+        _dirtyTids call GLT_Trials_fnc_syncCourseObjectVisibilityForTrialIds;
+    };
+    GLT_Trials_courseVisLastActiveTids = +_nowTids;
+};
 
 true
 

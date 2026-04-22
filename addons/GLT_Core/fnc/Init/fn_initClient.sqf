@@ -1,9 +1,10 @@
 /*
     GLT_Trials_fnc_initClient
-    Client-side bootstrap for the helicopter time trial framework.
+    Client-side bootstrap for the time trial framework.
 */
 
 if (!hasInterface) exitWith {};
+if (isNil "GLT_Trials_trialsAvailable") then { GLT_Trials_trialsAvailable = false; };
 
 // Clear any stray local hover lamps from a previous session (e.g. editor restart).
 [] call GLT_Trials_fnc_clearHoverZoneLights;
@@ -39,22 +40,6 @@ if (isNil "GLT_Trials_draw3D_eh" || { GLT_Trials_draw3D_eh < 0 }) then {
     }];
 };
 
-// Attach/cleanup the "Time Trials" action when the player enters/exits a valid helicopter.
-player addEventHandler ["GetInMan", {
-    params ["_unit", "_role", "_vehicle"];
-    diag_log text format ["[PTF_TT][GETIN] unit=%1 role=%2 vehicle=%3 type=%4", _unit, _role, _vehicle, typeOf _vehicle];
-    if (_unit isNotEqualTo player) exitWith {};
-    if (isNull _vehicle) exitWith {};
-    [_unit, _vehicle] call GLT_Trials_fnc_onVehicleEntered;
-}];
-
-player addEventHandler ["GetOutMan", {
-    params ["_unit", "_role", "_vehicle"];
-    if (_unit isNotEqualTo player) exitWith {};
-    if (isNull _vehicle) exitWith {};
-    [_unit, _vehicle] call GLT_Trials_fnc_onVehicleExited;
-}];
-
 // Setup interactive terminals (single class: GLT_Trials_Terminal; Rsc UI with Live / Leaderboard tabs).
 {
     private _obj = _x;
@@ -80,14 +65,16 @@ player addEventHandler ["GetOutMan", {
 
 // Clients rely on server broadcasts (GLT_Trials_activeRunsPublic / GLT_Trials_recentRunsPublic) for timing + state.
 
-// Register keybind (CBA) for opening the Time Trials selector, if CBA is present.
+// Trial menu: CBA keybind (Shift+T) when CBA is loaded.
+// Run on key *up*: opening Rsc from keyDown while modifiers are active often drops the first open
+// (display 46 / createDisplay not ready until the next tick or after the key stack unwinds).
 if (isClass (configFile >> "CfgPatches" >> "cba_main")) then {
     // DIK_T = 0x14; Shift + T
     ["PTF_TT",
      "TimeTrialsSelect",
-     ["Time Trials - Select Trial", "Time Trials"],
-     { [] call GLT_Trials_fnc_onKeySelectTrial },
+     ["Time Trials - Select Trial", "Open the trial menu while driving an eligible vehicle."],
      {},
+     { [] call GLT_Trials_fnc_onKeySelectTrial },
      [0x14, [true, false, false]]
     ] call CBA_fnc_addKeybind;
 };

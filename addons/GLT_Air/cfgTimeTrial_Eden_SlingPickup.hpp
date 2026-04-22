@@ -20,5 +20,4 @@ class Attributes
         defaultValue = "(""Land_FoodSacks_01_cargo_white_idap_F"")";
         expression = "_this setVariable ['GLT_Trials_slingPickupCargoClass', _value, true]";
     };
-
 };

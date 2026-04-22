@@ -70,6 +70,9 @@ class CfgFunctions
         {
             file = "\z\GLT\addons\GLT_Core\fnc\Register";
             class registerTrial {};
+            class collectSegmentTrialIds {};
+            class resolveTrialMetaObject {};
+            class resolveSegmentCourseObject {};
             class registerSegments_DestroyTarget {};
             class registerSegments_DestroyInfantry {};
         };
@@ -83,9 +86,8 @@ class CfgFunctions
             class tickServer {};
             class finishRun {};
             class abortRun {};
-            class onVehicleEntered {};
-            class onVehicleExited {};
-            class syncCourseObjectVisibility {};
+            class syncCourseObjectVisibilityFull {};
+            class syncCourseObjectVisibilityForTrialIds {};
         };
 
         class Segments
@@ -117,6 +119,7 @@ class CfgFunctions
         {
             file = "\z\GLT\addons\GLT_Core\fnc\Helpers";
             class parseAllowedHelis {};
+            class vehicleMatchesTrialCategoryMask {};
             class calcOBBData {};
             class getHelperLightDimsFromObj {};
             class normalizeHelperLightDims {};

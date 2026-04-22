@@ -1,11 +1,11 @@
 /*
     GLT_Trials_fnc_updateBaseScreens
-    Draw3D-time HUD for in-heli trial overlay (not the placed terminal Rsc).
+    Draw3D-time HUD for in-vehicle trial overlay (not the placed terminal Rsc).
 */
 
 if (!hasInterface) exitWith {};
 if (!GLT_Trials_clientHudShown) exitWith {};
-// While the terminal Rsc (88100) is open, don't draw the in-heli hint HUD on top of it.
+// While the terminal Rsc (88100) is open, don't draw the in-vehicle hint HUD on top of it.
 if (!isNull findDisplay 88100) exitWith {};
 
 // Throttle hint updates (Draw3D can be very frequent)
@@ -97,7 +97,10 @@ if ((count _myRun) isEqualTo 0) then {
             };
             if (GLT_Trials_nextMarkerName in allMapMarkers) then { deleteMarkerLocal GLT_Trials_nextMarkerName; };
         } else {
-            if (_segmentType isEqualTo "END") then {
+            private _wpIdx = parseNumber (str (GLT_Trials_lastSeenRunRow param [10, 0]));
+            private _wpTot = parseNumber (str (GLT_Trials_lastSeenRunRow param [11, 1]));
+            private _onLastWaypoint = (_wpTot > 0) && { (_wpIdx + 1) >= _wpTot };
+            if (_onLastWaypoint || {_segmentType isEqualTo "END"}) then {
                 _myLine = format [
                     "<t size='0.9' color='#7CFC00'>Finished: %1<br/>Final Time: %2</t><br/>",
                     _trialName,
@@ -136,12 +139,14 @@ if ((count _myRun) isEqualTo 0) then {
     private _wpIndex = _myRun param [10, 0];
     private _wpTotal = _myRun param [11, 0];
     private _segType = _myRun param [9, ""];
+    private _wpIdxN = parseNumber (str _wpIndex);
+    private _wpTotN = parseNumber (str _wpTotal);
 
     _myLine = format [
         "<t size='0.9' color='#ffffff'>%1<br/>Waypoint: %2 / %3<br/>%4<br/>Elapsed: %5</t><br/>",
         _trialName,
-        _wpIndex,
-        _wpTotal,
+        (_wpIdxN + 1) max 1,
+        (_wpTotN max 1),
         _segmentDesc,
         [_elapsed] call BIS_fnc_secondsToString
     ];
@@ -228,6 +233,50 @@ if ((count _myRun) isEqualTo 0) then {
         _myLine = _myLine + "<t size='0.82' color='#ffffff'>" + _zoneStr + "<br/>" + _hookStr + "<br/>" + _distStr + " - " + _clockStr + "</t>";
     };
 
+    // Same distance + clock reference as sling delivery, using trial vehicle position vs waypoint center.
+    if ((_segType isEqualTo "HOVER_POINT") || { _segType isEqualTo "LAND_POINT" }) then {
+        private _centerHL = _myRun param [8, [0, 0, 0]];
+        private _radHL = _myRun param [23, -1];
+        if ((count _centerHL) >= 3) then {
+            private _vehHL = vehicle player;
+            private _fromPosHL = if (_vehHL != player) then { getPosWorld _vehHL } else { getPosWorld player };
+            private _dist2DHL = _fromPosHL distance2D _centerHL;
+            private _d10hl = round (_dist2DHL * 10);
+            private _wholehl = floor (_d10hl / 10);
+            private _frachl = _d10hl mod 10;
+            private _dFmtHL = "";
+            if (_frachl isEqualTo 0) then { _dFmtHL = str _wholehl } else { _dFmtHL = (str _wholehl) + "." + (str _frachl) };
+            private _distLineHL = _dFmtHL + " m";
+
+            private _zoneStrHL = "";
+            if (_radHL > 0) then {
+                if (_dist2DHL <= _radHL) then {
+                    _zoneStrHL = "Vehicle: within radius";
+                } else {
+                    _zoneStrHL = "Vehicle: outside radius";
+                };
+            } else {
+                _zoneStrHL = "Vehicle: distance to center";
+            };
+
+            private _dirToC = [_fromPosHL, _centerHL] call BIS_fnc_dirTo;
+            private _refDirHL = if (_vehHL != player) then { getDir _vehHL } else { getDir player };
+            private _relHL = _dirToC - _refDirHL;
+            if (_relHL < 0) then { _relHL = _relHL + 360 };
+            if (_relHL >= 360) then { _relHL = _relHL - 360 };
+            private _sectorHL = floor ((_relHL + 15) / 30);
+            if (_sectorHL >= 12) then { _sectorHL = 0 };
+            private _clockHL = if (_sectorHL isEqualTo 0) then { 12 } else { _sectorHL };
+            private _clockStrHL = "Center: " + (str _clockHL) + " o'clock";
+
+            private _titleHL = if (_segType isEqualTo "HOVER_POINT") then { "Hover zone" } else { "Landing zone" };
+
+            _myLine = _myLine + "<t size='0.8' color='#6f6f6f'>--------------------</t><br/>";
+            _myLine = _myLine + "<t size='0.85' color='#bdefff'>" + _titleHL + "</t><br/>";
+            _myLine = _myLine + "<t size='0.82' color='#ffffff'>" + _zoneStrHL + "<br/>" + _distLineHL + " - " + _clockStrHL + "</t>";
+        };
+    };
+
     // Map route: all waypoints; current objective green (1), others black (0.5).
     private _tid = _myRun param [13, ""];
     private _route = [];
@@ -241,26 +290,13 @@ if ((count _myRun) isEqualTo 0) then {
     if ((count _route) > 0) then {
         private _segType = _myRun param [9, ""];
         private _wpIndex = _myRun param [10, 0];
-        private _activeR = 0;
-        if (_segType isEqualTo "WAIT_START") then {
-            _activeR = 0;
-        } else {
-            if (_segType isEqualTo "END") then {
-                _activeR = (count _route) - 1;
-            } else {
-                _activeR = 1 + _wpIndex;
-            };
-        };
+        private _activeR = _wpIndex;
         [_route, _activeR] call GLT_Trials_fnc_updateTrialRouteMarkers;
     } else {
         private _segPos = _myRun param [8, []];
-        private _st = _myRun param [9, "WAIT_START"];
+        private _st = _myRun param [9, ""];
         if ((count _segPos) >= 3) then {
-            private _kind = if (_st isEqualTo "WAIT_START") then {
-                "START"
-            } else {
-                if (_st isEqualTo "END") then { "END" } else { _st };
-            };
+            private _kind = if (_st isEqualTo "END") then { "END" } else { _st };
             [[[_kind, _segPos]], 0] call GLT_Trials_fnc_updateTrialRouteMarkers;
         };
     };

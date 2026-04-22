@@ -1,17 +1,19 @@
 /*
-    GLT_Trials_fnc_syncCourseObjectVisibility
-    Server: hide course objects (start/end/segments) unless their trial has an active run.
-    Uses GLT_Trials_courseObjectsByTrial (trialId -> [objects]) filled in registerTrial.
-
-    Important: only call hideObjectGlobal when the desired state *changes*. Re-sending
-    hideObjectGlobal false every tick resets client-side hideObject() and makes the
-    3D visibility window (syncCourseObjects3DWindow) blink for all hidden waypoints.
+    GLT_Trials_fnc_syncCourseObjectVisibilityForTrialIds
+    Server: update hideObjectGlobal only for the given trial ids (symmetric-diff / abort paths).
+    Call: _trialIds call GLT_Trials_fnc_syncCourseObjectVisibilityForTrialIds
+      where _trialIds is an array of trialId strings (may be empty; no-op).
 */
 
 if (!isServer) exitWith {};
 
+private _trialIds = _this;
+if (!(_trialIds isEqualType [])) then { _trialIds = [_trialIds]; };
+
 if (isNil "GLT_Trials_courseObjectsByTrial") exitWith {};
 if (isNil "GLT_Trials_trials") exitWith {};
+
+if ((count _trialIds) isEqualTo 0) exitWith {};
 
 private _activeTids = [];
 {
@@ -19,7 +21,7 @@ private _activeTids = [];
 } forEach GLT_Trials_activeRunsPrivate;
 
 {
-    private _tid = _x select 0;
+    private _tid = _x;
     private _objs = GLT_Trials_courseObjectsByTrial getOrDefault [_tid, []];
     private _show = (_activeTids find _tid) >= 0;
     {
@@ -33,6 +35,6 @@ private _activeTids = [];
         _x hideObjectGlobal _wantHiddenGlobal;
         _x setVariable ["GLT_Trials_ttSrvCourseHidden", _wantHiddenGlobal];
     } forEach _objs;
-} forEach GLT_Trials_trials;
+} forEach _trialIds;
 
 true

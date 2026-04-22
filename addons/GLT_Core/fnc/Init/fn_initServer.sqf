@@ -1,12 +1,12 @@
 /*
     GLT_Trials_fnc_initServer
-    Server-side bootstrap for the helicopter time trial framework.
+    Server-side bootstrap for the time trial framework.
 */
 
 if (!isServer) exitWith {};
 
 // Server authoritative containers
-GLT_Trials_trials = [];                   // public trial list: [trialId, trialName, allowedHelis]
+GLT_Trials_trials = [];                   // public trial list: + vehicleCategoryMask at index 9
 GLT_Trials_trialsById = createHashMap;   // internal trial configs by id
 GLT_Trials_activeRunsPrivate = [];       // internal run hashmaps
 GLT_Trials_activeRunsPublic = [];        // for clients (HUD)
@@ -14,6 +14,12 @@ GLT_Trials_activeRunsPublic = [];        // for clients (HUD)
 GLT_Trials_runEndBroadcast = [];
 GLT_Trials_recentRuns = [];              // completed runs (server internal)
 GLT_Trials_recentRunsPublic = [];       // completed runs (client leaderboard)
+// True after leaderboard mutation; cleared when tickServer broadcasts recentRunsPublic.
+GLT_Trials_recentRunsDirty = false;
+// Last set of trialIds with an active run (for diff-based course visibility); [] after full sync.
+GLT_Trials_courseVisLastActiveTids = [];
+// True only when at least one trial is registered; clients and loops use this to fast-disable functionality.
+GLT_Trials_trialsAvailable = false;
 
 // Persistence config
 GLT_Trials_persistenceMode = 0;         // 0 = no persistence, 1 = profileNamespace
@@ -59,9 +65,15 @@ GLT_Trials_recentRunsPublic = [GLT_Trials_recentRunsPublic, [], { _x select 2 },
 // Start server tick loop for active runs
 [] spawn {
     while {true} do {
-        // Tick every 0.1s for reasonably smooth timing
-        [time] call GLT_Trials_fnc_tickServer;
-        uiSleep 0.1;
+        // Skip tick work entirely when no trials exist; keep fast cadence only while runs are active.
+        if (GLT_Trials_trialsAvailable || { (count GLT_Trials_activeRunsPrivate) > 0 }) then {
+            [time] call GLT_Trials_fnc_tickServer;
+        };
+        if ((count GLT_Trials_activeRunsPrivate) > 0) then {
+            uiSleep 0.1;
+        } else {
+            uiSleep 0.75;
+        };
     };
 };
 
@@ -73,4 +85,5 @@ publicVariable "GLT_Trials_persistenceBackend";
 publicVariable "GLT_Trials_activeRunsPublic";
 publicVariable "GLT_Trials_runEndBroadcast";
 publicVariable "GLT_Trials_recentRunsPublic";
+publicVariable "GLT_Trials_trialsAvailable";
 

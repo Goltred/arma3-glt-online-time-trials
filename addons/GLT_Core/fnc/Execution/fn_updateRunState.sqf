@@ -31,110 +31,11 @@ private _lastPosWorld = _run get "lastPosWorld";
 
 private _finish = false;
 
-// WAIT_START phase: touch the start object.
-// Simplified rule: when the heli is within startRadius (2D), consider it crossed.
-if (_segmentIndex < 0) then {
-    private _startPosWorld = _trial select 3; // OBB center
-    private _startRadius = _trial select 4; // legacy / CENTER_2D
-    private _startNormal = _trial select 5;
-    private _startUp = _trial select 6;
-    private _startRight = _trial select 7;
-
-    private _startTouchMethod = _trial select 10;
-    private _startTouchPadding = _trial select 11;
-    private _startOBBHalfExtents = _trial select 12;
-    private _startSphereCenterWorld = _trial select 13;
-    private _startSphereRadius = _trial select 14;
-
-    // Approximate heli hull using boundingBoxReal (works for MP and doesn't rely on boundingSphere*).
-    private _axisRightN = vectorNormalized _startRight;
-    private _axisUpN = vectorNormalized _startUp;
-    private _axisNormalN = vectorNormalized _startNormal;
-
-    private _bb = boundingBoxReal _heli;
-    private _bbMin = _bb select 0;
-    private _bbMax = _bb select 1;
-
-    private _cx = ((_bbMin select 0) + (_bbMax select 0)) / 2;
-    private _cy = ((_bbMin select 1) + (_bbMax select 1)) / 2;
-    private _cz = ((_bbMin select 2) + (_bbMax select 2)) / 2;
-    private _heliCenterWorld = _heli modelToWorld [_cx, _cy, _cz];
-
-    private _xMin = _bbMin select 0; private _xMax = _bbMax select 0;
-    private _yMin = _bbMin select 1; private _yMax = _bbMax select 1;
-    private _zMin = _bbMin select 2; private _zMax = _bbMax select 2;
-
-    private _cornersLocal = [
-        [_xMin,_yMin,_zMin],
-        [_xMin,_yMin,_zMax],
-        [_xMin,_yMax,_zMin],
-        [_xMin,_yMax,_zMax],
-        [_xMax,_yMin,_zMin],
-        [_xMax,_yMin,_zMax],
-        [_xMax,_yMax,_zMin],
-        [_xMax,_yMax,_zMax]
-    ];
-
-    private _heliHalfRight = 0;
-    private _heliHalfUp = 0;
-    private _heliHalfNormal = 0;
-    private _heliSphereRadius = 0;
-
-    {
-        private _cw = _heli modelToWorld _x;
-        private _delta = _cw vectorDiff _heliCenterWorld;
-
-        private _pR = abs (_delta vectorDotProduct _axisRightN);
-        private _pU = abs (_delta vectorDotProduct _axisUpN);
-        private _pN = abs (_delta vectorDotProduct _axisNormalN);
-        if (_pR > _heliHalfRight) then { _heliHalfRight = _pR };
-        if (_pU > _heliHalfUp) then { _heliHalfUp = _pU };
-        if (_pN > _heliHalfNormal) then { _heliHalfNormal = _pN };
-
-        private _d = sqrt (
-            (_delta select 0) * (_delta select 0) +
-            (_delta select 1) * (_delta select 1) +
-            (_delta select 2) * (_delta select 2)
-        );
-        if (_d > _heliSphereRadius) then { _heliSphereRadius = _d };
-    } forEach _cornersLocal;
-
-    private _crossed = false;
-    if (_startTouchMethod isEqualTo 0) then {
-        // OBB_HULL: center-in-inflated-OBB using heli half extents projected onto the target axes.
-        private _rel = _heliCenterWorld vectorDiff _startPosWorld;
-
-        private _x = abs (_rel vectorDotProduct _axisRightN);
-        private _y = abs (_rel vectorDotProduct _axisUpN);
-        private _z = abs (_rel vectorDotProduct _axisNormalN);
-
-        private _hx = (_startOBBHalfExtents select 0) + _heliHalfRight + _startTouchPadding;
-        private _hy = (_startOBBHalfExtents select 1) + _heliHalfUp + _startTouchPadding;
-        private _hz = (_startOBBHalfExtents select 2) + _heliHalfNormal + _startTouchPadding;
-
-        if ((_x <= _hx) && { (_y <= _hy) } && { (_z <= _hz) }) then { _crossed = true };
-    } else {
-    if (_startTouchMethod isEqualTo 1) then {
-        // SPHERE_HULL: sphere-sphere (sphere center uses the OBB center for robustness).
-        private _d = _heliCenterWorld distance _startPosWorld;
-        if (_d <= (_startSphereRadius + _heliSphereRadius + _startTouchPadding)) then { _crossed = true };
-    } else {
-    if (_startTouchMethod isEqualTo 2) then {
-        // CENTER_2D (legacy).
-        private _d2 = _heliCenterWorld distance2D _startPosWorld;
-        if (_d2 <= (_startRadius + _startTouchPadding)) then { _crossed = true };
-    };
-    };
-    };
-
-    if (_crossed) then {
-        _run set ["startTime", _now];
-        _run set ["segmentIndex", 0];
-        _run set ["hoverStartTime", -1];
-        _run set ["landStayStartTime", -1];
-        _run set ["slingStayStartTime", -1];
-    };
-} else { if (_segmentIndex < count _segments) then {
+// segmentIndex is always in range during a normal run (starts at 0; no separate WAIT_START phase).
+if (_segmentIndex < 0 || { _segmentIndex >= count _segments }) then {
+    _run set ["didFinish", false];
+    _finish = true;
+} else {
     private _seg = _segments select _segmentIndex;
     private _segType = _seg select 0;
 
@@ -323,114 +224,26 @@ if (_segmentIndex < 0) then {
         };
     };
 
-    // Move to next segment on completion
+    // Move to next segment on completion, or finish when the last waypoint (last segment) is complete.
+    // Timer arms when segment 0 completes (startTime was -1 at run accept).
     if (_segmentCompleted) then {
-        _run set ["segmentIndex", _segmentIndex + 1];
-        _run set ["hoverStartTime", -1];
-        _run set ["landStayStartTime", -1];
-        _run set ["slingStayStartTime", -1];
+        if ((_run get "startTime") < 0 && { _segmentIndex isEqualTo 0 }) then {
+            _run set ["startTime", _now];
+        };
+        if (_segmentIndex >= ((count _segments) - 1)) then {
+            _run set ["didFinish", true];
+            _finish = true;
+        } else {
+            _run set ["segmentIndex", _segmentIndex + 1];
+            _run set ["hoverStartTime", -1];
+            _run set ["landStayStartTime", -1];
+            _run set ["slingStayStartTime", -1];
+        };
     };
-} else {
-    // End stage: finish when touching the end object.
-    private _endConfig = _trial select 8; // [endPosWorld, endRadius, endNormal, endUp, endRight, ...]
-    private _endPos = _endConfig select 0;
-    private _endRadius = _endConfig select 1;
-
-    private _endTouchMethod = _endConfig select 5;
-    private _endTouchPadding = _endConfig select 6;
-    private _endOBBHalfExtents = _endConfig select 7;
-    private _endSphereCenterWorld = _endConfig select 8;
-    private _endSphereRadius = _endConfig select 9;
-
-    // Approximate heli hull using boundingBoxReal (works without boundingSphere*).
-    private _axisRightN = vectorNormalized (_endConfig select 4);
-    private _axisUpN = vectorNormalized (_endConfig select 3);
-    private _axisNormalN = vectorNormalized (_endConfig select 2);
-
-    private _bb = boundingBoxReal _heli;
-    private _bbMin = _bb select 0;
-    private _bbMax = _bb select 1;
-
-    private _cx = ((_bbMin select 0) + (_bbMax select 0)) / 2;
-    private _cy = ((_bbMin select 1) + (_bbMax select 1)) / 2;
-    private _cz = ((_bbMin select 2) + (_bbMax select 2)) / 2;
-    private _heliCenterWorld = _heli modelToWorld [_cx, _cy, _cz];
-
-    private _xMin = _bbMin select 0; private _xMax = _bbMax select 0;
-    private _yMin = _bbMin select 1; private _yMax = _bbMax select 1;
-    private _zMin = _bbMin select 2; private _zMax = _bbMax select 2;
-
-    private _cornersLocal = [
-        [_xMin,_yMin,_zMin],
-        [_xMin,_yMin,_zMax],
-        [_xMin,_yMax,_zMin],
-        [_xMin,_yMax,_zMax],
-        [_xMax,_yMin,_zMin],
-        [_xMax,_yMin,_zMax],
-        [_xMax,_yMax,_zMin],
-        [_xMax,_yMax,_zMax]
-    ];
-
-    private _heliHalfRight = 0;
-    private _heliHalfUp = 0;
-    private _heliHalfNormal = 0;
-    private _heliSphereRadius = 0;
-
-    {
-        private _cw = _heli modelToWorld _x;
-        private _delta = _cw vectorDiff _heliCenterWorld;
-
-        private _pR = abs (_delta vectorDotProduct _axisRightN);
-        private _pU = abs (_delta vectorDotProduct _axisUpN);
-        private _pN = abs (_delta vectorDotProduct _axisNormalN);
-        if (_pR > _heliHalfRight) then { _heliHalfRight = _pR };
-        if (_pU > _heliHalfUp) then { _heliHalfUp = _pU };
-        if (_pN > _heliHalfNormal) then { _heliHalfNormal = _pN };
-
-        private _d = sqrt (
-            (_delta select 0) * (_delta select 0) +
-            (_delta select 1) * (_delta select 1) +
-            (_delta select 2) * (_delta select 2)
-        );
-        if (_d > _heliSphereRadius) then { _heliSphereRadius = _d };
-    } forEach _cornersLocal;
-
-    private _crossed = false;
-    if (_endTouchMethod isEqualTo 0) then {
-        // OBB_HULL
-        private _rel = _heliCenterWorld vectorDiff _endPos;
-
-        private _x = abs (_rel vectorDotProduct _axisRightN);
-        private _y = abs (_rel vectorDotProduct _axisUpN);
-        private _z = abs (_rel vectorDotProduct _axisNormalN);
-
-        private _hx = (_endOBBHalfExtents select 0) + _heliHalfRight + _endTouchPadding;
-        private _hy = (_endOBBHalfExtents select 1) + _heliHalfUp + _endTouchPadding;
-        private _hz = (_endOBBHalfExtents select 2) + _heliHalfNormal + _endTouchPadding;
-
-        if ((_x <= _hx) && { (_y <= _hy) } && { (_z <= _hz) }) then { _crossed = true };
-    } else {
-    if (_endTouchMethod isEqualTo 1) then {
-        // SPHERE_HULL (sphere center uses the OBB center).
-        private _d = _heliCenterWorld distance _endPos;
-        if (_d <= (_endSphereRadius + _heliSphereRadius + _endTouchPadding)) then { _crossed = true };
-    } else {
-    if (_endTouchMethod isEqualTo 2) then {
-        // CENTER_2D (legacy)
-        private _d2 = _heliCenterWorld distance2D _endPos;
-        if (_d2 <= (_endRadius + _endTouchPadding)) then { _crossed = true };
-    };
-    };
-    };
-
-    // Pure fly-through end gate: crossing the end volume is enough (heli must still be alive).
-    if (_crossed && {alive _heli}) then { _finish = true };
-};
 };
 
 // Update last position for gate crossing.
 _run set ["lastPosWorld", _posWorld];
 
-_run set ["didFinish", _finish];
 _finish
 

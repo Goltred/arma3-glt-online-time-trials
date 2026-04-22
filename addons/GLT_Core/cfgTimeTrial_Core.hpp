@@ -2,8 +2,19 @@ class CfgVehicles
 {
     class Logic;
     class Land_MultiScreenComputer_01_black_F;
-    class Sign_Circle_F;
     class Sign_Arrow_Direction_Green_F;
+    class Sign_Arrow_Large_Green_F;
+
+    // Editor-only helper: holds trial name, vehicle whitelist, category toggles. Removed from world after registerTrial.
+    class GLT_Trials_TrialMeta : Sign_Arrow_Large_Green_F
+    {
+        scope = 2;
+        editorCategory = "GLT_Trials";
+        editorSubcategory = "GLT_Trials_Config";
+        author = "GLT";
+        displayName = "Time Trials - Trial Definition";
+        #include "cfgTimeTrial_Eden_TrialMeta.hpp"
+    };
 
     class GLT_Trials_Master : Logic
     {
@@ -13,26 +24,6 @@ class CfgVehicles
         author = "GLT";
         displayName = "Time Trials - Master";
         #include "cfgTimeTrial_Eden_Master.hpp"
-    };
-
-    class GLT_Trials_TrialStart : Sign_Circle_F
-    {
-        scope = 2;
-        editorCategory = "GLT_Trials";
-        editorSubcategory = "GLT_Trials_Trials";
-        author = "GLT";
-        displayName = "Time Trials - Trial Start";
-        #include "cfgTimeTrial_Eden_TrialStart.hpp"
-    };
-
-    class GLT_Trials_TrialEnd : Sign_Circle_F
-    {
-        scope = 2;
-        editorCategory = "GLT_Trials";
-        editorSubcategory = "GLT_Trials_Trials";
-        author = "GLT";
-        displayName = "Time Trials - Trial End";
-        #include "cfgTimeTrial_Eden_TrialEnd.hpp"
     };
 
     class GLT_Trials_DestroyTarget : Sign_Arrow_Direction_Green_F

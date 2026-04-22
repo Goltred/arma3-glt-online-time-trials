@@ -1,6 +1,6 @@
 /*
     GLT_Trials_fnc_requestCancelRun
-    Server: pilot requests to cancel their active trial run.
+    Server: driver requests to cancel their active trial run.
     Params: [_player]
 */
 

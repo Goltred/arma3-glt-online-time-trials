@@ -53,7 +53,7 @@ if (_mode isEqualTo "STOP") exitWith {
         hintSilent "Time Trials: vehicle no longer available.";
     };
     if (driver _veh isNotEqualTo player) exitWith {
-        hintSilent "Time Trials: you must be the pilot.";
+        hintSilent "Time Trials: you must be the driver.";
     };
     [player] call _requestCancelLocal;
     _disp closeDisplay 0;
@@ -106,19 +106,23 @@ if (!(_startPos isEqualType []) || { count _startPos < 3 }) exitWith {
 // Close the overlay display.
 _disp closeDisplay 0;
 
-// Full route on map; start is active until server state arrives.
+// Full route on map; highlight first waypoint until server row arrives.
 private _mapRoute = [];
+private _trialRow = [];
 {
     if ((_x select 0) isEqualTo _trialId) exitWith {
+        _trialRow = _x;
         _mapRoute = _x param [7, []];
     };
 } forEach GLT_Trials_trials;
 if ((count _mapRoute) isEqualTo 0) then {
-    _mapRoute = [["START", _startPos]];
+    private _fp = if ((count _trialRow) > 0) then { _trialRow param [6, _startPos] } else { +_startPos };
+    if (!(_fp isEqualType []) || { count _fp < 3 }) then { _fp = +_startPos };
+    _mapRoute = [["CROSS_GATE", +_fp]];
 };
 [_mapRoute, 0] call GLT_Trials_fnc_updateTrialRouteMarkers;
 
-// Start the run immediately; the server will begin the timer on fly-through of the start object plane.
+// Start the run immediately; the server arms the timer when waypoint 1 (segment 0) completes.
 private _runId = [_veh, _trialId, player] call _startRunLocal;
 private _runIdN = [_runId] call _coerceRunId;
 if (_runIdN >= 0) then {

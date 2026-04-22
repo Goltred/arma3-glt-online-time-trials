@@ -1,21 +1,20 @@
 /*
     GLT_Trials_fnc_onKeySelectTrial
-    Invoked from a keybind to open the trial selection dialog for the current helicopter.
+    Invoked from a keybind to open the trial selection dialog for the vehicle you are driving.
 */
 
 if (!hasInterface) exitWith {};
+if (!(missionNamespace getVariable ["GLT_Trials_trialsAvailable", false])) exitWith {
+    hintSilent "Time Trials: no trials are configured on this mission.";
+};
 
 private _veh = vehicle player;
 if (_veh isEqualTo player) exitWith {
-    hintSilent "Time Trials: you must be in a helicopter as pilot.";
-};
-
-if (!(_veh isKindOf "Helicopter")) exitWith {
-    hintSilent "Time Trials: only helicopters are supported.";
+    hintSilent "Time Trials: you must be in a vehicle as driver.";
 };
 
 if (driver _veh isNotEqualTo player) exitWith {
-    hintSilent "Time Trials: you must be the pilot.";
+    hintSilent "Time Trials: you must be the driver.";
 };
 
 if (isNil "GLT_Trials_trials") exitWith {
@@ -28,8 +27,10 @@ private _eligible = [];
     private _trialId = _x select 0;
     private _trialName = _x select 1;
     private _allowedHelis = _x select 2;
-    // Empty list = no restriction (Eden default was often "[]" / unset).
-    if ((count _allowedHelis isEqualTo 0) || (_allowedHelis find _heliType >= 0)) then {
+    private _catMask = _x param [9, []];
+    private _classOk = (count _allowedHelis isEqualTo 0) || (_allowedHelis find _heliType >= 0);
+    private _catOk = ([_veh, _catMask] call GLT_Trials_fnc_vehicleMatchesTrialCategoryMask);
+    if (_classOk && {_catOk}) then {
         _eligible pushBack [_trialId, _trialName];
     };
 } forEach GLT_Trials_trials;
@@ -53,7 +54,7 @@ if (_activeHere) exitWith {
 };
 
 if (count _eligible isEqualTo 0) exitWith {
-    hintSilent "Time Trials: no trials available for this helicopter.";
+    hintSilent "Time Trials: no trials available for this vehicle.";
 };
 
 [_veh, _eligible] call GLT_Trials_fnc_openTrialMenu;

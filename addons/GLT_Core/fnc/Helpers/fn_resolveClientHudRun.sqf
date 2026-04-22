@@ -2,9 +2,9 @@
     GLT_Trials_fnc_resolveClientHudRun
     Client: pick the GLT_Trials_activeRunsPublic row this machine should use for trial HUD / effects.
 
-    Row index 22 = trial helicopter netId (see fn_tickServer), when present and matching.
+    Row index 22 = trial vehicle netId (see fn_tickServer), when present and matching.
     Also treats crew as "in run" when the trial pilot is the driver of vehicle player (covers
-    netId mismatches / empty row[22] / mod helis that are not isKindOf "Helicopter").
+    netId mismatches / empty row[22]).
 */
 
 if (!hasInterface) exitWith {[]};
@@ -16,19 +16,10 @@ if ((count _list) isEqualTo 0) exitWith {[]};
 private _myUID = getPlayerUID player;
 private _veh = vehicle player;
 
-// netId for MP matching; include Air + helicopter simulation (some assets skip Helicopter class).
+// netId for MP matching on any crewed vehicle (cars, boats, aircraft, etc.).
 private _vn = "";
 if (_veh isNotEqualTo player) then {
-    if (_veh isKindOf "Helicopter") then {
-        _vn = netId _veh;
-    } else {
-        if (_veh isKindOf "Air") then {
-            private _sim = toLower getText (configFile >> "CfgVehicles" >> typeOf _veh >> "simulation");
-            if ((_sim find "helicopter") >= 0 || {_sim isEqualTo "helicopterrtd"}) then {
-                _vn = netId _veh;
-            };
-        };
-    };
+    _vn = netId _veh;
 };
 
 private _rowViewable = {

@@ -1,6 +1,6 @@
 /*
     GLT_Trials_fnc_startRun
-    Server-side start handler for a pilot selecting a trial.
+    Server-side start handler for a driver selecting a trial.
     Params: [_heli, _trialId, _player]
     Returns: runId (number) or -1 if rejected.
 */
@@ -13,7 +13,7 @@ if (isNull _player) exitWith {-1};
 if (!isPlayer _player) exitWith {-1};
 
 diag_log text format [
-    "[PTF_TT][START_RUN] request heliType=%1 trialId=%2 pilot=%3",
+    "[PTF_TT][START_RUN] request vehType=%1 trialId=%2 pilot=%3",
     typeOf _heli,
     _trialId,
     name _player
@@ -31,14 +31,26 @@ private _trialName = _trial select 1;
 private _allowedHelis = _trial select 2;
 
 private _heliType = typeOf _heli;
-// Empty allowedHelis = any helicopter (see registerTrial / Eden defaults).
+// Empty allowedHelis = any vehicle classname (see registerTrial / Eden defaults).
 if !((count _allowedHelis isEqualTo 0) || (_allowedHelis find _heliType >= 0)) exitWith {
     diag_log text format [
-        "[PTF_TT][START_RUN] REJECT heliType=%1 not in allowedHelis=%2",
+        "[PTF_TT][START_RUN] REJECT vehType=%1 not in allowedHelis=%2",
         _heliType,
         _allowedHelis
     ];
     -1
+};
+
+private _catMask = _trial param [17, []];
+if ((count _catMask) isEqualTo 4) then {
+    if (!([_heli, _catMask] call GLT_Trials_fnc_vehicleMatchesTrialCategoryMask)) exitWith {
+        diag_log text format [
+            "[PTF_TT][START_RUN] REJECT vehType=%1 fails vehicle category mask=%2",
+            _heliType,
+            _catMask
+        ];
+        -1
+    };
 };
 
 // Only allow one active run per pilot.
@@ -47,9 +59,9 @@ if ({ (_x get "pilotUID") isEqualTo _pilotUID } count GLT_Trials_activeRunsPriva
 // Start zone validation removed:
 // the timer begins when the pilot flies through the start object plane.
 
-// Ensure player is in control of this heli.
+// Ensure player is driving the trial vehicle.
 if (driver _heli isNotEqualTo _player) exitWith {
-    diag_log "[PTF_TT][START_RUN] REJECT driver is not pilot";
+    diag_log "[PTF_TT][START_RUN] REJECT driver is not requesting player";
     -1
 };
 
@@ -73,8 +85,8 @@ _run set ["pilotObj", _player];
 _run set ["startTime", -1];
 
 private _segments = _trial select 9;
-// segmentIndex == -1 => waiting to fly through start plane.
-_run set ["segmentIndex", -1];
+// segmentIndex 0 = first waypoint; startTime stays -1 until segment 0 completes (timer arms then).
+_run set ["segmentIndex", 0];
 _run set ["segmentsCount", count _segments];
 
 _run set ["hoverStartTime", -1];
@@ -119,7 +131,7 @@ _run set ["destroyInfOptionalGrps", _optionalSpawnedInf];
 GLT_Trials_activeRunsPrivate pushBack _run;
 
 diag_log text format [
-    "[PTF_TT][START_RUN] ACCEPT runId=%1 trialId=%2 heliType=%3 allowedHelis=%4 pilotUID=%5",
+    "[PTF_TT][START_RUN] ACCEPT runId=%1 trialId=%2 vehType=%3 allowedHelis=%4 pilotUID=%5",
     _runId,
     _trialId,
     _heliType,
@@ -130,9 +142,6 @@ diag_log text format [
 // Publish active run row immediately; tick loop can be up to ~0.1s behind Draw3D on clients.
 [time] call GLT_Trials_fnc_tickServer;
 publicVariable "GLT_Trials_activeRunsPublic";
-publicVariable "GLT_Trials_recentRunsPublic";
-
-[] call GLT_Trials_fnc_syncCourseObjectVisibility;
 
 _runId
 

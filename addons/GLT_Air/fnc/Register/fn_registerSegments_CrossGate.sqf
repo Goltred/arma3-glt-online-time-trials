@@ -15,7 +15,7 @@ private _crossGates = allMissionObjects "GLT_Trials_CrossGate";
     _objs pushBack _x;
 
     private _segIdx = _x getVariable ["GLT_Trials_segmentIndex", 0];
-    private _gateRadius = _x getVariable ["GLT_Trials_gateRadius", 8];
+    private _gateRadius = _x getVariable ["GLT_Trials_gateRadius", 20];
     private _gateCrossTolerance = _x getVariable ["GLT_Trials_gateCrossTolerance", 3];
 
     private _gatePosWorld = getPosWorld _x;
