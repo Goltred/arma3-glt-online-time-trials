@@ -1,119 +1,33 @@
-Online Time Trials — Steam Workshop description
-==================================================
-Paste the section below into the Workshop item description field.
-Steam uses BBCode: [h1], [h2], [b], [list], [*], [url=...]...[/url]
-
---- BEGIN PASTE BELOW THIS LINE -----------------------------------------------
-
 [h1]Online Time Trials[/h1]
 
-[b]What this mod does[/b]
-Online Time Trials lets mission makers place timed trials in any scenario (single player or multiplayer). Each trial is a course built from ordered [b]segment waypoints[/b] (gates, hovers, sling loads, destroy targets, and more) that need to be completed in order, recording the total time taken on it. Pilots get in a vehicle, pick a trial, and the server tracks their run with timing, HUD feedback, and optional leaderboard persistence.
+[b]What it is[/b]
+Place timed trial courses in any mission (SP/MP): ordered segment waypoints (gates, hovers, sling loads, destroy targets, and more), HUD timing, and optional leaderboards.
 
 [b]Requirements[/b]
 [list]
-[*]Community Base Addons ([url=https://steamcommunity.com/workshop/filedetails/?id=450814997]CBA_A3[/url]) — used for the default keyboard shortcut to open the trial menu.
+[*][url=https://steamcommunity.com/workshop/filedetails/?id=450814997]CBA_A3[/url] — default keybind to open the trial menu.
 [/list]
 
 [img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Hero.png[/img]
 
-[h2]Creating a trial (overview)[/h2]
-In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for config, trials, segments, terminals).
-
+[h2]Quick start (mission makers)[/h2]
 [list]
-[*]Place one [b]Trial Definition[/b] object ([i]GLT_Trials_TrialMeta[/i]) per course. This is required for registration.
-[*]Set the Trial Definition [b]Trial Id[/b] (unique per course on the map), [b]Trial Name[/b], and optional vehicle filters ([b]Allowed Vehicle Classes[/b] + heli/plane/ground/ship checkboxes).
-[*]Place segment modules (gates, hovers, sling, destroy, etc.) and set each segment [b]Segment Index[/b] (ascending order).
-[*]In Eden, [b]connect/sync each segment to the Trial Definition[/b]. Trials are built from the Trial Definition's synchronized objects.
-[*]Optionally place the [b]Master[/b] object to control leaderboard persistence (profile vs reset each mission).
-[*]Optionally place [b]Terminal[/b] objects for a “Time Trials Terminal” screen (live runs / leaderboard) in-game.
+[*]Eden: [b]Empty → Online Time Trials[/b] — place one [b]Trial Definition[/b] ([i]GLT_Trials_TrialMeta[/i]) per course; set [b]Trial Id[/b] (unique) and [b]Trial Name[/b].
+[*]Place segment modules; set [b]Segment Index[/b] ascending; [b]sync each segment to the Trial Definition[/b].
+[*]Optional: [b]Master[/b] (leaderboard persistence), [b]Terminal[/b] (in-game leaderboard screen).
 [/list]
+Trial Definition objects are editor helpers and are removed at mission start — that is normal.
 
-[b]Important:[/b] Trial Definition helpers are editor/config objects and are automatically removed when the mission starts. That is expected.
-
-[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Eden.png[/img]
-
-[h2]Segments — what each type does[/h2]
-
-Each segment shares: [b]Segment Index[/b] (order). Segments are assigned to a course by being synchronized to that course's [b]Trial Definition[/b]. [b]Destroy[/b] segments can be marked [b]Optional obstacle only[/b] — they spawn for the run but do not count as a waypoint and despawn when the run ends.
-
-[b]Cross Gate[/b]
-Fly through a vertical gate plane. Tuned with [b]Gate Radius[/b] (horizontal) and [b]Plane Cross Tolerance[/b] (how close you must be to the gate plane along its forward axis).
-
-[b]Hover Point[/b]
-Stay inside the hover zone for a set time while respecting altitude and (by default) hover. Attributes include [b]Alt Min / Alt Max[/b] (m above the marker), [b]Hover Duration[/b] (seconds), [b]Extra horizontal radius[/b] (m, added to the placed helper), and optional [b]helper light[/b] fade distances (full strength vs dimmest as you approach).
-
-[b]Land Point[/b]
-Land within [b]Land Radius[/b] and remain on the ground for [b]Stay Duration[/b] (seconds).
-
-[b]Sling Pickup[/b]
-Pick up sling cargo: set the [b]Cargo class[/b] (CfgVehicles classname spawned for the load). The framework ensures the cargo exists for the run.
-
-[b]Sling Deliver (Circle)[/b]
-Deliver the load on the ground inside a [b]Delivery Radius[/b] (circle). Visual cones mark the zone.
-
-[b]Sling Deliver (Rectangle)[/b]
-Deliver inside a rectangle aligned to the object: [b]Half Width[/b] and [b]Half Length[/b] (meters from center along the helper’s axes). Optional [b]corner light[/b] fade distances behave like the hover helper lights.
-
-[b]Destroy Target[/b]
-Destroy a spawned [b]Vehicle[/b] target. Options: [b]Spawn driver[/b], [b]Spawn gunner / commander[/b], [b]Crew side[/b], [b]Crew skill[/b]. Can be [b]Optional obstacle only[/b].
-
-[b]Destroy Infantry[/b]
-Destroy a spawned infantry [b]squad[/b]: [b]Infantry class[/b] (must be a Man class), [b]Unit count[/b], [b]Squad skill[/b]. Can be [b]Optional obstacle only[/b].
-
-[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Hints.png[/img]
-
-[h2]Limiting which vehicles can enter a trial[/h2]
-On the [b]Trial Definition[/b], use [b]Allowed Vehicle Classes (comma-separated)[/b] and the vehicle category checkboxes.
-
-[list]
-[*][b]Leave Allowed Vehicle Classes empty[/b] — category checkboxes control eligibility.
-[*][b]List classnames[/b] — e.g. [i]B_Heli_Transport_01_F,B_Heli_Light_01_F[/i] — only those classes are eligible.
-[*][b]Categories[/b] are [i]Helicopter / Plane / Ground / Ship[/i]. If no category is configured yet, default behavior is helicopter-focused.
-[/list]
-
-[h2]How the player starts a trial[/h2]
+[h2]Players[/h2]
 [list]
 [*]Get in an [b]eligible vehicle[/b] as [b]driver/pilot[/b].
-[*]Press [b]Shift + T[/b] (CBA keybind: “Time Trials - Select Trial”) to open the trial list, choose a trial, confirm with [b]OK[/b].
-[*]Near a placed [b]Terminal[/b], use the scroll action [b]Time Trials Terminal[/b] for live/leaderboard views (separate from starting a run in the heli).
+[*][b]Shift + T[/b] (CBA: “Time Trials - Select Trial”) → pick trial → [b]OK[/b].
+[*]Near a [b]Terminal[/b]: scroll action [b]Time Trials Terminal[/b] for live runs / leaderboard.
 [/list]
 
-If nothing appears: wait until trials have synced from the server; you must be [b]driver/pilot[/b] of an eligible vehicle; and your vehicle must match that trial's category/class filters.
+[h2]Full documentation[/h2]
+Segment types, vehicle filters, troubleshooting, UI details, and maker tips are on the project wiki (same content as the long-form guide):
 
-[h2]Why a trial may not appear (quick checklist)[/h2]
-[list]
-[*]A [b]Trial Definition[/b] object exists and has a non-empty [b]Trial Id[/b].
-[*]Every segment intended for that trial is [b]synchronized to that Trial Definition[/b].
-[*]Segments have valid [b]Segment Index[/b] values (ordered, no accidental duplicates).
-[*]Trial Id is [b]unique[/b] per course on the map.
-[*]Your current vehicle matches both the [b]category[/b] filter and (if set) [b]Allowed Vehicle Classes[/b].
-[*]You are in the correct seat for start flow (pilot/driver), then open the selector.
-[/list]
-
-[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Selection.png[/img]
-
-[h2]UI you will see during a run[/h2]
-[list]
-[*][b]Trial selector dialog[/b] — lists eligible trials by name; [b]OK[/b] starts the selected run, [b]Cancel[/b] closes.
-[*][b]HUD / Draw3D[/b] — timer and guidance while a run is active (driven by the client draw loop).
-[*][b]Hover progress[/b] — progress UI while completing a hover segment (progress bar / text in the HUD layer).
-[*][b]Sling delivery HUD[/b] — feedback while delivering in circle or rectangle zones.
-[*][b]Course helpers[/b] — gates, smoke, lights, and 3D/route hints tied to the active segment (visibility is managed during the run).
-[*][b]Terminal UI[/b] — structured screen with [b]Live[/b] vs [b]Leaderboard[/b] style views when using a placed terminal (if the mission includes one).
-[/list]
-
-[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/UI.png[/img]
-
-[h2]Tips for mission makers[/h2]
-[list]
-[*]Use a unique [b]Trial Id[/b] per course; duplicate ids on the same map will conflict.
-[*]Segment order is [b]Segment Index[/b] ascending — gaps are fine, but duplicates for the same trial can behave unpredictably.
-[*]Registration is driven by [b]Trial Definition sync links[/b], check that all your segments are linked to appropriate Trial Definition.
-[*]Start/End zones support [b]Touch Method[/b] and [b]Touch Padding[/b] on the Eden objects for tighter or looser hull checks (see tooltips in Eden).
-[*]To share only the trial layout between missions, use Eden [b]custom compositions[/b] or copy the mod’s helper objects between missions on the same terrain.
-[/list]
+[url=https://github.com/Goltred/arma3-glt-online-time-trials/wiki]github.com/Goltred/arma3-glt-online-time-trials/wiki[/url]
 
 [b]Author:[/b] Goltred (Online Time Trials / GLT)
-
---- END PASTE -----------------------------------------------------------------
