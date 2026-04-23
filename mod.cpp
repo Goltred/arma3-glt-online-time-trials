@@ -4,7 +4,8 @@ picture = "mod_art\picture1024_ca.paa";
 logoSmall = "mod_art\icon64_ca.paa";
 logo = "mod_art\icon128_ca.paa";
 logoOver = "mod_art\icon128_ca.paa";
-action = "";
+actionName = "GitHub";
+action = "https://github.com/Goltred/arma3-glt-online-time-trials";
 tooltipOwned = "Online Time Trials";
 
 dlcColor[] = {0.23, 0.39, 0.30, 1};

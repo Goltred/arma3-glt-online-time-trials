@@ -15,7 +15,7 @@ Online Time Trials lets mission makers place timed trials in any scenario (singl
 [*]Community Base Addons ([url=https://steamcommunity.com/workshop/filedetails/?id=450814997]CBA_A3[/url]) — used for the default keyboard shortcut to open the trial menu.
 [/list]
 
-[IMAGE_PLACEHOLDER: Hero screenshot — pilot in a helicopter with the trial HUD or course visible; good first impression for the store page.]
+[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Hero.png[/img]
 
 [h2]Creating a trial (overview)[/h2]
 In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for config, trials, segments, terminals).
@@ -31,7 +31,7 @@ In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for
 
 [b]Important:[/b] Trial Definition helpers are editor/config objects and are automatically removed when the mission starts. That is expected.
 
-[IMAGE_PLACEHOLDER: Eden editor — segment helpers placed on the map with the mod’s icons visible.]
+[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Eden.png[/img]
 
 [h2]Segments — what each type does[/h2]
 
@@ -61,7 +61,7 @@ Destroy a spawned [b]Vehicle[/b] target. Options: [b]Spawn driver[/b], [b]Spawn 
 [b]Destroy Infantry[/b]
 Destroy a spawned infantry [b]squad[/b]: [b]Infantry class[/b] (must be a Man class), [b]Unit count[/b], [b]Squad skill[/b]. Can be [b]Optional obstacle only[/b].
 
-[IMAGE_PLACEHOLDER: In-game — hover point with helper lights, or sling delivery zone with cones/smoke.]
+[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Hints.png[/img]
 
 [h2]Limiting which vehicles can enter a trial[/h2]
 On the [b]Trial Definition[/b], use [b]Allowed Vehicle Classes (comma-separated)[/b] and the vehicle category checkboxes.
@@ -91,7 +91,7 @@ If nothing appears: wait until trials have synced from the server; you must be [
 [*]You are in the correct seat for start flow (pilot/driver), then open the selector.
 [/list]
 
-[IMAGE_PLACEHOLDER: Trial selection dialog (“Time Trials” list with OK / Cancel).]
+[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/Selection.png[/img]
 
 [h2]UI you will see during a run[/h2]
 [list]
@@ -103,7 +103,7 @@ If nothing appears: wait until trials have synced from the server; you must be [
 [*][b]Terminal UI[/b] — structured screen with [b]Live[/b] vs [b]Leaderboard[/b] style views when using a placed terminal (if the mission includes one).
 [/list]
 
-[IMAGE_PLACEHOLDER: Split image or two screenshots — (1) timer/guidance HUD during a run, (2) terminal or leaderboard screen.]
+[img]https://raw.githubusercontent.com/Goltred/arma3-glt-online-time-trials/refs/heads/main/steam/UI.png[/img]
 
 [h2]Tips for mission makers[/h2]
 [list]
