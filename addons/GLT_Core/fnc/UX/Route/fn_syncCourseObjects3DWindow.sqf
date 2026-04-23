@@ -47,11 +47,7 @@ private _resetLocal = {
         if (!isNil "GLT_Trials_lastSeenRunRow") then {
             private _tid = GLT_Trials_lastSeenRunRow param [13, ""];
             if (!isNil "GLT_Trials_trials" && { _tid isNotEqualTo "" }) then {
-                private _trialRow = [];
-                {
-                    if ((_x select 0) isEqualTo _tid) exitWith { _trialRow = _x };
-                } forEach GLT_Trials_trials;
-                _objs = _trialRow param [8, []];
+                _objs = ([_tid] call GLT_Trials_fnc_findPublicTrialRowById) param [8, []];
             };
         };
     };
@@ -98,12 +94,11 @@ if ((count _myRun) isEqualTo 0) exitWith {
 };
 
 if (missionNamespace getVariable ["GLT_Trials_timeTrialsShowFullCourse3D", false]) exitWith {
-    private _trialRowFull = [];
     private _tidF = _myRun param [13, ""];
-    if (!isNil "GLT_Trials_trials" && { _tidF isNotEqualTo "" }) then {
-        {
-            if ((_x select 0) isEqualTo _tidF) exitWith { _trialRowFull = _x };
-        } forEach GLT_Trials_trials;
+    private _trialRowFull = if (!isNil "GLT_Trials_trials" && { _tidF isNotEqualTo "" }) then {
+        [_tidF] call GLT_Trials_fnc_findPublicTrialRowById
+    } else {
+        []
     };
     private _objsF = _trialRowFull param [8, []];
     {
@@ -116,11 +111,10 @@ if (missionNamespace getVariable ["GLT_Trials_timeTrialsShowFullCourse3D", false
 };
 
 private _tid = _myRun param [13, ""];
-private _trialRow = [];
-if (!isNil "GLT_Trials_trials" && { _tid isNotEqualTo "" }) then {
-    {
-        if ((_x select 0) isEqualTo _tid) exitWith { _trialRow = _x };
-    } forEach GLT_Trials_trials;
+private _trialRow = if (!isNil "GLT_Trials_trials" && { _tid isNotEqualTo "" }) then {
+    [_tid] call GLT_Trials_fnc_findPublicTrialRowById
+} else {
+    []
 };
 
 private _courseObjs = _trialRow param [8, []];

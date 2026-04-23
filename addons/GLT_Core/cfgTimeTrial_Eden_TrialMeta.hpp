@@ -5,7 +5,7 @@ class Attributes
     class GLT_Trials_trialId: GLT_Trials_Base_TrialId
     {
         property = "GLT_Trials_trialId_TrialMeta_Property";
-        tooltip = "Must match every waypoint object in this trial. One Trial Definition object per trial id (first wins if duplicates).";
+        tooltip = "Unique trial id. In Eden use Connections to link every segment waypoint with this object (either direction). Set Segment Index on each segment. One Trial Definition per id (first wins if duplicates).";
     };
 
     class GLT_Trials_trialName: GLT_Trials_Base_TrialName

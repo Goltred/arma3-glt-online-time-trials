@@ -1,17 +1,17 @@
 /*
     GLT_Trials_fnc_registerSegments_SlingPickup
+    Params: [_candidates] — objects synchronized to the Trial Definition (filtered here by type).
     Returns: [segments, courseObjs]
 */
 
-params [["_trialId", "", [""]]];
+params [["_candidates", [], [[]]]];
 
 private _segments = [];
 private _objs = [];
 
-private _slingPickups = allMissionObjects "GLT_Trials_SlingPickup";
 {
-    private _sid = _x getVariable ["GLT_Trials_trialId", ""];
-    if !(_sid isEqualTo _trialId) then { continue };
+    if (isNull _x) then { continue };
+    if !(_x isKindOf "GLT_Trials_SlingPickup") then { continue };
 
     // Green arrow helper only (like sling deliver rect / destroy spawns); hidden in mission via syncCourseObjectVisibility.
     _x setVariable ["GLT_Trials_runtimeAlwaysHidden", true, true];
@@ -26,7 +26,6 @@ private _slingPickups = allMissionObjects "GLT_Trials_SlingPickup";
 
     // ["SLING_PICKUP", segIdx, posASL, cargoClass]
     _segments pushBack ["SLING_PICKUP", _segIdx, _posWorld, _cargoClass];
-} forEach _slingPickups;
+} forEach _candidates;
 
 [_segments, _objs]
-

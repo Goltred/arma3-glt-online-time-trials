@@ -206,10 +206,10 @@ if ((count _myRun) isEqualTo 0) then {
                     if (_slB == _cargo) then { _onHook = true };
                 };
                 if (!_onHook) then {
-                    _onHook = (_cargo getVariable ["PTF_RopesAttached", 0] > 0);
+                    _onHook = (_cargo getVariable ["GLT_Trials_cargoRopesAttached", 0] > 0);
                 };
             } else {
-                _onHook = (_cargo getVariable ["PTF_RopesAttached", 0] > 0);
+                _onHook = (_cargo getVariable ["GLT_Trials_cargoRopesAttached", 0] > 0);
             };
             if (_onHook) then { _hookStr = "Hook: attached" } else { _hookStr = "Hook: released" };
 
@@ -279,13 +279,10 @@ if ((count _myRun) isEqualTo 0) then {
 
     // Map route: all waypoints; current objective green (1), others black (0.5).
     private _tid = _myRun param [13, ""];
-    private _route = [];
-    if (!isNil "GLT_Trials_trials" && { _tid isNotEqualTo "" }) then {
-        {
-            if ((_x select 0) isEqualTo _tid) exitWith {
-                _route = _x param [7, []];
-            };
-        } forEach GLT_Trials_trials;
+    private _route = if (!isNil "GLT_Trials_trials" && { _tid isNotEqualTo "" }) then {
+        ([_tid] call GLT_Trials_fnc_findPublicTrialRowById) param [7, []]
+    } else {
+        []
     };
     if ((count _route) > 0) then {
         private _segType = _myRun param [9, ""];

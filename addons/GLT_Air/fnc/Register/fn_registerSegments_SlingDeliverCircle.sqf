@@ -1,17 +1,17 @@
 /*
     GLT_Trials_fnc_registerSegments_SlingDeliverCircle
+    Params: [_candidates] — objects synchronized to the Trial Definition (filtered here by type).
     Returns: [segments, courseObjs]
 */
 
-params [["_trialId", "", [""]]];
+params [["_candidates", [], [[]]]];
 
 private _segments = [];
 private _objs = [];
 
-private _slingCircle = allMissionObjects "GLT_Trials_SlingDeliver";
 {
-    private _sid = _x getVariable ["GLT_Trials_trialId", ""];
-    if !(_sid isEqualTo _trialId) then { continue };
+    if (isNull _x) then { continue };
+    if !(_x isKindOf "GLT_Trials_SlingDeliver") then { continue };
     _objs pushBack _x;
 
     private _segIdx = _x getVariable ["GLT_Trials_segmentIndex", 0];
@@ -20,7 +20,6 @@ private _slingCircle = allMissionObjects "GLT_Trials_SlingDeliver";
 
     // ["SLING_DELIVER_CIRCLE", segIdx, posASL, radius]
     _segments pushBack ["SLING_DELIVER_CIRCLE", _segIdx, _posWorld, _radius];
-} forEach _slingCircle;
+} forEach _candidates;
 
 [_segments, _objs]
-

@@ -18,7 +18,7 @@ class GLT_Trials_Base_Number
 class GLT_Trials_Base_TrialId: GLT_Trials_Base_String
 {
     displayName = "Trial Id";
-    tooltip = "Id shared by this waypoint and the Trial Definition object for the same trial. A matching Trial Definition is required for the trial to register. Must match every segment in the course.";
+    tooltip = "Unique id for this trial (HUD, terminal, internal keys). Set on the Trial Definition only. Sync all segment waypoints to that object in Eden.";
     defaultValue = "(""trial_1"")";
     expression = "_this setVariable ['GLT_Trials_trialId', _value, true]";
 }
@@ -89,7 +89,7 @@ class GLT_Trials_Base_TouchPadding: GLT_Trials_Base_Number
 class GLT_Trials_Base_SegmentIndex: GLT_Trials_Base_Number
 {
     displayName = "Segment Index (order)";
-    tooltip = "Higher segments come later in the trial.";
+    tooltip = "Sort order within the trial (lowest first). Sync this waypoint to the Trial Definition object; only Segment Index is required on segments.";
     expression = "_this setVariable ['GLT_Trials_segmentIndex', _value, true]";
 };
 

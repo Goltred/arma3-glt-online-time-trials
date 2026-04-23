@@ -1,6 +1,6 @@
 /*
     GLT_Trials_fnc_resolveTrialMetaObject
-    Server: first GLT_Trials_TrialMeta object with matching GLT_Trials_trialId.
+    Server: first GLT_Trials_TrialMeta object with matching GLT_Trials_trialId (e.g. tooling; registration uses a meta map + synchronizedObjects).
     Params: [_trialId]
     Returns: object or objNull
 */

@@ -5,6 +5,9 @@
 
 if (!hasInterface) exitWith {};
 if (isNil "GLT_Trials_trialsAvailable") then { GLT_Trials_trialsAvailable = false; };
+if (isNil { missionNamespace getVariable "GLT_Trials_categoryMaskByTrialId" }) then {
+    GLT_Trials_categoryMaskByTrialId = createHashMap;
+};
 
 // Clear any stray local hover lamps from a previous session (e.g. editor restart).
 [] call GLT_Trials_fnc_clearHoverZoneLights;
@@ -70,7 +73,7 @@ if (isNil "GLT_Trials_draw3D_eh" || { GLT_Trials_draw3D_eh < 0 }) then {
 // (display 46 / createDisplay not ready until the next tick or after the key stack unwinds).
 if (isClass (configFile >> "CfgPatches" >> "cba_main")) then {
     // DIK_T = 0x14; Shift + T
-    ["PTF_TT",
+    ["GLT_Trials",
      "TimeTrialsSelect",
      ["Time Trials - Select Trial", "Open the trial menu while driving an eligible vehicle."],
      {},

@@ -1,42 +1,48 @@
 /*
     GLT_Trials_fnc_registerTrial
-    Scans Eden-placed segment objects and builds:
+    Scans Eden-placed Trial Definition objects (GLT_Trials_TrialMeta) and objects synchronized to each one, then builds:
       - GLT_Trials_trials (public array for clients)
       - GLT_Trials_trialsById (internal map): trialId -> trialConfig
 
-    Trial ids are collected from segment waypoints and GLT_Trials_TrialMeta helpers. After sorting by segmentIndex,
-    the first waypoint is the run entry (timer arms when segment 0 completes). A matching Trial Definition
-    (GLT_Trials_TrialMeta, same trial id) is required: display name, allowed class list, and vehicle-type category
-    toggles are read from it. Trials with segments but no Trial Definition are skipped (not registered / not active).
-    Trial Definition props are deleted after scan.
+    Workflow: set Trial Id on the Trial Definition, sync all segment waypoints to that object (Eden connector), set
+    Segment Index on each segment for order. After sorting by segmentIndex, the first segment is run entry (timer arms
+    when segment 0 completes). Trial Definition props are deleted after scan.
 */
 
 if (!isServer) exitWith {};
 
 GLT_Trials_courseObjectsByTrial = createHashMap;
-
-diag_log text format [
-    "[PTF_TT][REGISTER] trial id scan (segments + definitions)=%1",
-    count ([] call GLT_Trials_fnc_collectSegmentTrialIds)
-];
+GLT_Trials_categoryMaskByTrialId = createHashMap;
 
 // Eden attribute expressions set object variables via setVariable.
 // On dedicated servers this can happen a tick or two after postInit; wait briefly.
 private _deadline = time + 5;
-diag_log text format ["[PTF_TT][REGISTER] waiting for segment trial ids until t=%1", _deadline];
 
 while { time <= _deadline } do {
     if ((count ([] call GLT_Trials_fnc_collectSegmentTrialIds)) > 0) exitWith {};
     sleep 0.1;
 };
 
-private _trialIds = [] call GLT_Trials_fnc_collectSegmentTrialIds;
-_trialIds sort true;
+private _metaByTid = createHashMap;
+private _seenTrialIds = [];
+{
+    private _metaObj = _x;
+    private _tid = _metaObj getVariable ["GLT_Trials_trialId", ""];
+    if (_tid isEqualTo "") then { continue };
+    if (_tid in _seenTrialIds) then {
+        diag_log text format [
+            "[GLT_Trials][REGISTER] Duplicate Trial Definition for trial id '%1'; keeping first object, ignoring %2.",
+            _tid,
+            typeOf _metaObj
+        ];
+    } else {
+        _seenTrialIds pushBack _tid;
+        _metaByTid set [_tid, _metaObj];
+    };
+} forEach ((allMissionObjects "") select { typeOf _x == "GLT_Trials_TrialMeta" });
 
-diag_log text format [
-    "[PTF_TT][REGISTER] after wait: trialIdCount=%1",
-    count _trialIds
-];
+private _trialIds = keys _metaByTid;
+_trialIds sort true;
 
 GLT_Trials_trialsById = createHashMap;
 GLT_Trials_trials = [];
@@ -45,29 +51,33 @@ GLT_Trials_trials = [];
     private _trialId = _x;
     if (_trialId isEqualTo "") then { continue };
 
+    private _meta = _metaByTid get _trialId;
+    private _candidates = [_meta, _trialId] call GLT_Trials_fnc_collectSegmentObjectsForTrialMeta;
+    if (isNil "_candidates") then { _candidates = []; };
+
     private _segments = [];
     private _courseObjs = [];
 
     private _callRegisterPair = {
-        params ["_fnName"];
+        params ["_fnName", "_cand", "_segs", "_objs"];
         if (isNil _fnName) exitWith {};
-        private _resLocal = [_trialId] call (missionNamespace getVariable _fnName);
-        _segments append (_resLocal select 0);
-        { _courseObjs pushBackUnique _x } forEach (_resLocal select 1);
+        private _resLocal = [_cand] call (missionNamespace getVariable _fnName);
+        _segs append (_resLocal select 0);
+        { _objs pushBackUnique _x } forEach (_resLocal select 1);
     };
-    ["GLT_Trials_fnc_registerSegments_CrossGate"] call _callRegisterPair;
-    ["GLT_Trials_fnc_registerSegments_HoverPoint"] call _callRegisterPair;
-    ["GLT_Trials_fnc_registerSegments_LandPoint"] call _callRegisterPair;
-    ["GLT_Trials_fnc_registerSegments_SlingPickup"] call _callRegisterPair;
-    ["GLT_Trials_fnc_registerSegments_SlingDeliverCircle"] call _callRegisterPair;
-    ["GLT_Trials_fnc_registerSegments_SlingDeliverRect"] call _callRegisterPair;
+    ["GLT_Trials_fnc_registerSegments_CrossGate", _candidates, _segments, _courseObjs] call _callRegisterPair;
+    ["GLT_Trials_fnc_registerSegments_HoverPoint", _candidates, _segments, _courseObjs] call _callRegisterPair;
+    ["GLT_Trials_fnc_registerSegments_LandPoint", _candidates, _segments, _courseObjs] call _callRegisterPair;
+    ["GLT_Trials_fnc_registerSegments_SlingPickup", _candidates, _segments, _courseObjs] call _callRegisterPair;
+    ["GLT_Trials_fnc_registerSegments_SlingDeliverCircle", _candidates, _segments, _courseObjs] call _callRegisterPair;
+    ["GLT_Trials_fnc_registerSegments_SlingDeliverRect", _candidates, _segments, _courseObjs] call _callRegisterPair;
 
-    private _res = [_trialId] call GLT_Trials_fnc_registerSegments_DestroyTarget;
+    private _res = [_candidates] call GLT_Trials_fnc_registerSegments_DestroyTarget;
     _segments append (_res select 0);
     { _courseObjs pushBackUnique _x } forEach (_res select 1);
     private _optionalDestroyRows = _res select 2;
 
-    _res = [_trialId] call GLT_Trials_fnc_registerSegments_DestroyInfantry;
+    _res = [_candidates] call GLT_Trials_fnc_registerSegments_DestroyInfantry;
     _segments append (_res select 0);
     { _courseObjs pushBackUnique _x } forEach (_res select 1);
     private _optionalDestroyInfRows = _res select 2;
@@ -75,14 +85,8 @@ GLT_Trials_trials = [];
     _segments = [_segments, [], { _x#1 }, "ASCEND"] call BIS_fnc_sortBy;
 
     if ((count _segments) isEqualTo 0) then {
-        diag_log format ["[PTF_TT] Trial '%1' has no waypoint segments for this trialId. Skipping.", _trialId];
-        continue;
-    };
-
-    private _meta = [_trialId] call GLT_Trials_fnc_resolveTrialMetaObject;
-    if (isNull _meta) then {
         diag_log text format [
-            "[PTF_TT][REGISTER] Trial '%1' has no Trial Definition (GLT_Trials_TrialMeta). Skipping — not active.",
+            "[GLT_Trials][REGISTER] Trial '%1' skipped: no segment objects in synchronizedObjects(Trial Definition). Sync segments to the Trial Definition Logic in Eden.",
             _trialId
         ];
         continue;
@@ -98,7 +102,7 @@ GLT_Trials_trials = [];
     if (!(_allowedHelisRaw isEqualType "")) then { _allowedHelisRaw = ""; };
 
     private _firstSeg = _segments select 0;
-    private _anchorObj = [_trialId, _firstSeg, _courseObjs] call GLT_Trials_fnc_resolveSegmentCourseObject;
+    private _anchorObj = [_firstSeg, _courseObjs] call GLT_Trials_fnc_resolveSegmentCourseObject;
 
     private _allowedHelis = [_allowedHelisRaw] call GLT_Trials_fnc_parseAllowedHelis;
 
@@ -138,29 +142,40 @@ GLT_Trials_trials = [];
         _startTouchPadding = _anchorObj getVariable ["GLT_Trials_touchPadding", 0];
     };
 
-    // Vehicle-type checkboxes on Trial Definition object: [heli, plane, ground, ship] 0/1; [] = no filter.
+    // Vehicle-type checkboxes on Trial Definition: [heli, plane, ground, ship] each 0/1; [] = no filter (allow all).
+    // CheckboxNumber may omit keys until first edit in Eden. If no category key exists, default heli=1 (Eden default).
+    // Any key present => missing keys count as 0 (unticked). Do NOT use _v isEqualType 0/1 for scalars — in SQF every
+    // scalar has the same type, so 1 isEqualType 0 is true and would coerce ticked checkboxes to 0.
     private _vehicleCategoryMask = [];
-    private _rh = _meta getVariable "GLT_Trials_catHelicopter";
-    private _rp = _meta getVariable "GLT_Trials_catPlane";
-    private _rg = _meta getVariable "GLT_Trials_catGround";
-    private _rs = _meta getVariable "GLT_Trials_catShip";
-    if (!(isNil "_rh") && {!(isNil "_rp")} && {!(isNil "_rg")} && {!(isNil "_rs")}) then {
-        private _to01 = {
-            params ["_v"];
-            if (_v isEqualType true) exitWith { 1 };
-            if (_v isEqualType false) exitWith { 0 };
-            if (_v isEqualType 0) exitWith { 0 };
-            if (_v isEqualType 1) exitWith { 1 };
-            (_v max 0) min 1
-        };
-        _vehicleCategoryMask = [[_rh] call _to01, [_rp] call _to01, [_rg] call _to01, [_rs] call _to01];
-        if (
-            ((_vehicleCategoryMask select 0) + (_vehicleCategoryMask select 1)
-            + (_vehicleCategoryMask select 2) + (_vehicleCategoryMask select 3)) < 1
-        ) then {
-            _vehicleCategoryMask = [];
-        };
+    private _hasAnyCatVar =
+        !isNil { _meta getVariable "GLT_Trials_catHelicopter" }
+        || { !isNil { _meta getVariable "GLT_Trials_catPlane" } }
+        || { !isNil { _meta getVariable "GLT_Trials_catGround" } }
+        || { !isNil { _meta getVariable "GLT_Trials_catShip" } };
+    private _to01 = {
+        params ["_v"];
+        if (isNil "_v") exitWith { 0 };
+        if (_v isEqualTo true) exitWith { 1 };
+        if (_v isEqualTo false) exitWith { 0 };
+        if (_v isEqualTo 0) exitWith { 0 };
+        if (_v isEqualTo 1) exitWith { 1 };
+        if (_v isEqualType 0) exitWith { (_v max 0) min 1 };
+        0
     };
+    private _defH = if (_hasAnyCatVar) then { 0 } else { 1 };
+    private _h = [_meta getVariable ["GLT_Trials_catHelicopter", _defH]] call _to01;
+    private _p = [_meta getVariable ["GLT_Trials_catPlane", 0]] call _to01;
+    private _g = [_meta getVariable ["GLT_Trials_catGround", 0]] call _to01;
+    private _s = [_meta getVariable ["GLT_Trials_catShip", 0]] call _to01;
+    _vehicleCategoryMask = [_h, _p, _g, _s];
+    if (
+        ((_vehicleCategoryMask select 0) + (_vehicleCategoryMask select 1)
+        + (_vehicleCategoryMask select 2) + (_vehicleCategoryMask select 3)) < 1
+    ) then {
+        _vehicleCategoryMask = [];
+    };
+
+    GLT_Trials_categoryMaskByTrialId set [_trialId, +_vehicleCategoryMask];
 
     private _startSphereCenterWorld = _startPosWorld;
     private _srX = _startOBBHalfExtents select 0;
@@ -194,6 +209,7 @@ GLT_Trials_trials = [];
 
     GLT_Trials_courseObjectsByTrial set [_trialId, _courseObjs];
 
+    // Internal server-only row: indices referenced by name in fn_startRun.sqf / fn_tickServer.sqf / fn_updateRunState.sqf (see AGENTS.md).
     private _trialConfig = [
         _trialId,
         _trialName,
@@ -215,15 +231,6 @@ GLT_Trials_trials = [];
         _vehicleCategoryMask
     ];
 
-    diag_log text format [
-        "[PTF_TT][REGISTER] trialId=%1 name=%2 allowedRaw='%3' allowedParsed=%4 segCount=%5",
-        _trialId,
-        _trialName,
-        _allowedHelisRaw,
-        _allowedHelis,
-        count _segments
-    ];
-
     GLT_Trials_trialsById set [_trialId, _trialConfig];
 
     private _firstWaypointPosWorld = (_segments select 0) select 2;
@@ -236,7 +243,7 @@ GLT_Trials_trials = [];
     private _routeIdxSeg = 0;
     {
         private _segRow = _x;
-        private _hit = [_trialId, _segRow, _courseObjs] call GLT_Trials_fnc_resolveSegmentCourseObject;
+        private _hit = [_segRow, _courseObjs] call GLT_Trials_fnc_resolveSegmentCourseObject;
         if (!isNull _hit) then {
             _hit setVariable ["GLT_Trials_routeIndex", _routeIdxSeg, true];
         };
@@ -258,6 +265,7 @@ GLT_Trials_trials = [];
 } forEach _trialIds;
 
 publicVariable "GLT_Trials_trials";
+publicVariable "GLT_Trials_categoryMaskByTrialId";
 GLT_Trials_trialsAvailable = (count GLT_Trials_trials) > 0;
 publicVariable "GLT_Trials_trialsAvailable";
 
@@ -265,12 +273,9 @@ publicVariable "GLT_Trials_trialsAvailable";
 
 private _metaHelpers = (allMissionObjects "") select { typeOf _x == "GLT_Trials_TrialMeta" };
 { deleteVehicle _x } forEach _metaHelpers;
-if ((count _metaHelpers) > 0) then {
-    diag_log text format ["[PTF_TT][REGISTER] removed %1 Trial Definition helper(s) from mission world.", count _metaHelpers];
-};
 
 if (count GLT_Trials_trials isEqualTo 0) then {
-    diag_log "[PTF_TT][REGISTER] WARNING: zero trials registered. Each trial id needs segment waypoints plus a Trial Definition (GLT_Trials_TrialMeta) with the same id (name, allowed classes, vehicle-type filters).";
+    diag_log "[GLT_Trials][REGISTER] WARNING: zero trials registered. Place GLT_Trials_TrialMeta with Trial Id, sync segment objects to it, set Segment Index on each segment, and configure name / allowed classes / categories on the Trial Definition.";
 };
 
 true

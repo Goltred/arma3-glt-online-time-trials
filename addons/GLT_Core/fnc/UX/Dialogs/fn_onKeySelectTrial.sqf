@@ -22,14 +22,15 @@ if (isNil "GLT_Trials_trials") exitWith {
 };
 
 private _heliType = typeOf _veh;
+
 private _eligible = [];
 {
     private _trialId = _x select 0;
     private _trialName = _x select 1;
     private _allowedHelis = _x select 2;
-    private _catMask = _x param [9, []];
+    private _catMask = [_trialId, _x] call GLT_Trials_fnc_resolveTrialCategoryMask;
     private _classOk = (count _allowedHelis isEqualTo 0) || (_allowedHelis find _heliType >= 0);
-    private _catOk = ([_veh, _catMask] call GLT_Trials_fnc_vehicleMatchesTrialCategoryMask);
+    private _catOk = [_veh, _catMask] call GLT_Trials_fnc_vehicleMatchesTrialCategoryMask;
     if (_classOk && {_catOk}) then {
         _eligible pushBack [_trialId, _trialName];
     };

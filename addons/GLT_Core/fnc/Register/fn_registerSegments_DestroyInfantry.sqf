@@ -1,18 +1,18 @@
 /*
     GLT_Trials_fnc_registerSegments_DestroyInfantry
+    Params: [_candidates] — objects synchronized to the Trial Definition (filtered here by type).
     Returns: [segments, courseObjs, optionalRows]
 */
 
-params [["_trialId", "", [""]]];
+params [["_candidates", [], [[]]]];
 
 private _segments = [];
 private _objs = [];
 private _optionalRows = [];
 
-private _destroyInfantry = allMissionObjects "GLT_Trials_DestroyInfantry";
 {
-    private _sid = _x getVariable ["GLT_Trials_trialId", ""];
-    if !(_sid isEqualTo _trialId) then { continue };
+    if (isNull _x) then { continue };
+    if !(_x isKindOf "GLT_Trials_DestroyInfantry") then { continue };
     // Arrow helper is an editor gizmo only; keep it hidden at runtime (syncCourseObjectVisibility).
     _x setVariable ["GLT_Trials_runtimeAlwaysHidden", true, true];
 
@@ -48,7 +48,6 @@ private _destroyInfantry = allMissionObjects "GLT_Trials_DestroyInfantry";
         // ["DESTROY_INFANTRY", segIdx, posASL, infClass, count, skill, displayName, markerObj]
         _segments pushBack ["DESTROY_INFANTRY", _segIdx, _posWorld, _infClass, _countN, _skillN, _disp, _x];
     };
-} forEach _destroyInfantry;
+} forEach _candidates;
 
 [_segments, _objs, _optionalRows]
-

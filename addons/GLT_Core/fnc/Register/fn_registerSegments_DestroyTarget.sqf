@@ -1,18 +1,18 @@
 /*
     GLT_Trials_fnc_registerSegments_DestroyTarget
+    Params: [_candidates] — objects synchronized to the Trial Definition (filtered here by type).
     Returns: [segments, courseObjs, optionalRows]
 */
 
-params [["_trialId", "", [""]]];
+params [["_candidates", [], [[]]]];
 
 private _segments = [];
 private _objs = [];
 private _optionalRows = [];
 
-private _destroyTargets = allMissionObjects "GLT_Trials_DestroyTarget";
 {
-    private _sid = _x getVariable ["GLT_Trials_trialId", ""];
-    if !(_sid isEqualTo _trialId) then { continue };
+    if (isNull _x) then { continue };
+    if !(_x isKindOf "GLT_Trials_DestroyTarget") then { continue };
     // Arrow helper is an editor gizmo only; keep it hidden at runtime (syncCourseObjectVisibility).
     _x setVariable ["GLT_Trials_runtimeAlwaysHidden", true, true];
 
@@ -56,7 +56,6 @@ private _destroyTargets = allMissionObjects "GLT_Trials_DestroyTarget";
         // ["DESTROY_TARGET", segIdx, posASL, vehClass, spawnDriver, spawnGunners, side(0..3), displayName, markerObj, skill(0..1)]
         _segments pushBack ["DESTROY_TARGET", _segIdx, _posWorld, _vehClass, _spawnDriver, _spawnGunners, _sideN, _disp, _x, _skill];
     };
-} forEach _destroyTargets;
+} forEach _candidates;
 
 [_segments, _objs, _optionalRows]
-

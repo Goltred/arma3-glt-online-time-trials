@@ -8,7 +8,7 @@ Steam uses BBCode: [h1], [h2], [b], [list], [*], [url=...]...[/url]
 [h1]Online Time Trials[/h1]
 
 [b]What this mod does[/b]
-Online Time Trials lets mission makers place helicopter time trials in any scenario (single player or multiplayer). Each trial is a course built from ordered [b]segment waypoints[/b] (gates, hovers, sling loads, destroy targets, and more) that share a [b]Trial Id[/b]. Pilots get in a helicopter, pick a trial, and the server tracks their run with timing, HUD feedback, and optional leaderboard persistence.
+Online Time Trials lets mission makers place timed trials in any scenario (single player or multiplayer). Each trial is a course built from ordered [b]segment waypoints[/b] (gates, hovers, sling loads, destroy targets, and more) that need to be completed in order, recording the total time taken on it. Pilots get in a vehicle, pick a trial, and the server tracks their run with timing, HUD feedback, and optional leaderboard persistence.
 
 [b]Requirements[/b]
 [list]
@@ -18,20 +18,24 @@ Online Time Trials lets mission makers place helicopter time trials in any scena
 [IMAGE_PLACEHOLDER: Hero screenshot — pilot in a helicopter with the trial HUD or course visible; good first impression for the store page.]
 
 [h2]Creating a trial (overview)[/h2]
-In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for trials, segments, terminals).
+In the Eden editor, open [b]Empty → Online Time Trials[/b] (and subfolders for config, trials, segments, terminals).
 
 [list]
-[*]Place [b]segment[/b] modules (gates, hovers, etc.); each must use the same [b]Trial Id[/b] (e.g. [i]trial_1[/i]) and a [b]Segment Index[/b] — lower numbers run earlier in the course.
-[*]Optionally place a [b]Trial Definition[/b] helper (same [b]Trial Id[/b]) for friendly [b]Trial Name[/b], allowed vehicle classes, and vehicle-type checkboxes (heli/plane/ground/ship). It is removed when the mission runs so it does not appear in-game.
+[*]Place one [b]Trial Definition[/b] object ([i]GLT_Trials_TrialMeta[/i]) per course. This is required for registration.
+[*]Set the Trial Definition [b]Trial Id[/b] (unique per course on the map), [b]Trial Name[/b], and optional vehicle filters ([b]Allowed Vehicle Classes[/b] + heli/plane/ground/ship checkboxes).
+[*]Place segment modules (gates, hovers, sling, destroy, etc.) and set each segment [b]Segment Index[/b] (ascending order).
+[*]In Eden, [b]connect/sync each segment to the Trial Definition[/b]. Trials are built from the Trial Definition's synchronized objects.
 [*]Optionally place the [b]Master[/b] object to control leaderboard persistence (profile vs reset each mission).
 [*]Optionally place [b]Terminal[/b] objects for a “Time Trials Terminal” screen (live runs / leaderboard) in-game.
 [/list]
+
+[b]Important:[/b] Trial Definition helpers are editor/config objects and are automatically removed when the mission starts. That is expected.
 
 [IMAGE_PLACEHOLDER: Eden editor — segment helpers placed on the map with the mod’s icons visible.]
 
 [h2]Segments — what each type does[/h2]
 
-Each segment shares: [b]Trial Id[/b] (must match the trial), [b]Segment Index[/b] (order). [b]Destroy[/b] segments can be marked [b]Optional obstacle only[/b] — they spawn for the run but do not count as a waypoint and despawn when the run ends.
+Each segment shares: [b]Segment Index[/b] (order). Segments are assigned to a course by being synchronized to that course's [b]Trial Definition[/b]. [b]Destroy[/b] segments can be marked [b]Optional obstacle only[/b] — they spawn for the run but do not count as a waypoint and despawn when the run ends.
 
 [b]Cross Gate[/b]
 Fly through a vertical gate plane. Tuned with [b]Gate Radius[/b] (horizontal) and [b]Plane Cross Tolerance[/b] (how close you must be to the gate plane along its forward axis).
@@ -59,23 +63,33 @@ Destroy a spawned infantry [b]squad[/b]: [b]Infantry class[/b] (must be a Man cl
 
 [IMAGE_PLACEHOLDER: In-game — hover point with helper lights, or sling delivery zone with cones/smoke.]
 
-[h2]Limiting which helicopters can enter a trial[/h2]
-On [b]Trial Start[/b], use [b]Allowed Heli Classes (comma-separated)[/b].
+[h2]Limiting which vehicles can enter a trial[/h2]
+On the [b]Trial Definition[/b], use [b]Allowed Vehicle Classes (comma-separated)[/b] and the vehicle category checkboxes.
 
 [list]
-[*][b]Leave empty[/b] — any helicopter class can run the trial.
-[*][b]List classnames[/b] — e.g. [i]B_Heli_Transport_01_F,PTF_UH1Y[/i] — only those types see the trial in the selector and are validated for the course.
+[*][b]Leave Allowed Vehicle Classes empty[/b] — category checkboxes control eligibility.
+[*][b]List classnames[/b] — e.g. [i]B_Heli_Transport_01_F,B_Heli_Light_01_F[/i] — only those classes are eligible.
+[*][b]Categories[/b] are [i]Helicopter / Plane / Ground / Ship[/i]. If no category is configured yet, default behavior is helicopter-focused.
 [/list]
 
 [h2]How the player starts a trial[/h2]
 [list]
-[*]Get in a [b]helicopter as pilot[/b].
+[*]Get in an [b]eligible vehicle[/b] as [b]driver/pilot[/b].
 [*]Press [b]Shift + T[/b] (CBA keybind: “Time Trials - Select Trial”) to open the trial list, choose a trial, confirm with [b]OK[/b].
-[*]If you use [b]ACE3[/b], eligible helicopters get a [b]Time Trials[/b] self-interaction on the vehicle that opens the same flow.
 [*]Near a placed [b]Terminal[/b], use the scroll action [b]Time Trials Terminal[/b] for live/leaderboard views (separate from starting a run in the heli).
 [/list]
 
-If nothing appears: wait until trials have synced from the server; you must be [b]pilot[/b] of a [b]Helicopter[/b]; your heli type must be allowed for that trial.
+If nothing appears: wait until trials have synced from the server; you must be [b]driver/pilot[/b] of an eligible vehicle; and your vehicle must match that trial's category/class filters.
+
+[h2]Why a trial may not appear (quick checklist)[/h2]
+[list]
+[*]A [b]Trial Definition[/b] object exists and has a non-empty [b]Trial Id[/b].
+[*]Every segment intended for that trial is [b]synchronized to that Trial Definition[/b].
+[*]Segments have valid [b]Segment Index[/b] values (ordered, no accidental duplicates).
+[*]Trial Id is [b]unique[/b] per course on the map.
+[*]Your current vehicle matches both the [b]category[/b] filter and (if set) [b]Allowed Vehicle Classes[/b].
+[*]You are in the correct seat for start flow (pilot/driver), then open the selector.
+[/list]
 
 [IMAGE_PLACEHOLDER: Trial selection dialog (“Time Trials” list with OK / Cancel).]
 
@@ -95,6 +109,7 @@ If nothing appears: wait until trials have synced from the server; you must be [
 [list]
 [*]Use a unique [b]Trial Id[/b] per course; duplicate ids on the same map will conflict.
 [*]Segment order is [b]Segment Index[/b] ascending — gaps are fine, but duplicates for the same trial can behave unpredictably.
+[*]Registration is driven by [b]Trial Definition sync links[/b], check that all your segments are linked to appropriate Trial Definition.
 [*]Start/End zones support [b]Touch Method[/b] and [b]Touch Padding[/b] on the Eden objects for tighter or looser hull checks (see tooltips in Eden).
 [*]To share only the trial layout between missions, use Eden [b]custom compositions[/b] or copy the mod’s helper objects between missions on the same terrain.
 [/list]

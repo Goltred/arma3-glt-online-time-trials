@@ -7,6 +7,7 @@ if (!isServer) exitWith {};
 
 // Server authoritative containers
 GLT_Trials_trials = [];                   // public trial list: + vehicleCategoryMask at index 9
+GLT_Trials_categoryMaskByTrialId = createHashMap; // trialId -> mask; broadcast for reliable client filtering (see resolveTrialCategoryMask)
 GLT_Trials_trialsById = createHashMap;   // internal trial configs by id
 GLT_Trials_activeRunsPrivate = [];       // internal run hashmaps
 GLT_Trials_activeRunsPublic = [];        // for clients (HUD)
@@ -43,7 +44,8 @@ if (count _masters > 0) then {
 
 // Register trials after a short delay so mission objects (and Eden attribute variables) exist on dedicated server.
 [] spawn {
-    uiSleep 0.1;
+    // CheckboxNumber / category flags can land a few ticks after Trial Id on some hosts; 0.1s was marginal.
+    uiSleep 0.5;
     [] call GLT_Trials_fnc_registerTrial;
 };
 
@@ -70,7 +72,7 @@ GLT_Trials_recentRunsPublic = [GLT_Trials_recentRunsPublic, [], { _x select 2 },
             [time] call GLT_Trials_fnc_tickServer;
         };
         if ((count GLT_Trials_activeRunsPrivate) > 0) then {
-            uiSleep 0.1;
+            uiSleep 0.25;
         } else {
             uiSleep 0.75;
         };
@@ -86,4 +88,5 @@ publicVariable "GLT_Trials_activeRunsPublic";
 publicVariable "GLT_Trials_runEndBroadcast";
 publicVariable "GLT_Trials_recentRunsPublic";
 publicVariable "GLT_Trials_trialsAvailable";
+publicVariable "GLT_Trials_categoryMaskByTrialId";
 

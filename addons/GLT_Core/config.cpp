@@ -71,6 +71,7 @@ class CfgFunctions
             file = "\z\GLT\addons\GLT_Core\fnc\Register";
             class registerTrial {};
             class collectSegmentTrialIds {};
+            class collectSegmentObjectsForTrialMeta {};
             class resolveTrialMetaObject {};
             class resolveSegmentCourseObject {};
             class registerSegments_DestroyTarget {};
@@ -84,10 +85,20 @@ class CfgFunctions
             class requestCancelRun {};
             class updateRunState {};
             class tickServer {};
+            class tickServerBuildActiveRunPublicRow {};
+            class tickServerHoverLandHudExtras {};
+            class tickServerMaybeBroadcast {};
+            class tickServerProcessFinishedRun {};
+            class tickServerSegmentHudMeta {};
+            class tickServerSlingCargoOnHook {};
+            class tickServerSlingDeliverHud {};
+            class tickServerUpdateCourseVisDiff {};
             class finishRun {};
             class abortRun {};
             class syncCourseObjectVisibilityFull {};
             class syncCourseObjectVisibilityForTrialIds {};
+            class collectActiveTrialIds {};
+            class applyCourseVisibilityForTrial {};
         };
 
         class Segments
@@ -120,11 +131,13 @@ class CfgFunctions
             file = "\z\GLT\addons\GLT_Core\fnc\Helpers";
             class parseAllowedHelis {};
             class vehicleMatchesTrialCategoryMask {};
+            class resolveTrialCategoryMask {};
             class calcOBBData {};
             class getHelperLightDimsFromObj {};
             class normalizeHelperLightDims {};
             class numberFromEden {};
             class resolveClientHudRun {};
+            class findPublicTrialRowById {};
         };
 
         class UXDialogs
@@ -142,6 +155,7 @@ class CfgFunctions
             file = "\z\GLT\addons\GLT_Core\fnc\UX\HUD";
             class updateHud {};
             class drawFrame {};
+            class applyDistanceLightIntensity {};
             class updateHoverProgressBar {};
             class updateHoverZoneLightsIntensity {};
             class updateSlingDeliverRectLightsIntensity {};
@@ -168,6 +182,8 @@ class CfgFunctions
             class hoverZoneLights {};
             class clearHoverZoneLights {};
             class syncHoverZoneLights {};
+            class clearUiNamespaceSmokeShell {};
+            class syncHudSmokeShell {};
             class syncLandPointSmoke {};
             class clearLandPointSmoke {};
             class syncSlingPickupSmoke {};

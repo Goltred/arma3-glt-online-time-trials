@@ -1,17 +1,17 @@
 /*
     GLT_Trials_fnc_registerSegments_HoverPoint
+    Params: [_candidates] — objects synchronized to the Trial Definition (filtered here by type).
     Returns: [segments, courseObjs]
 */
 
-params [["_trialId", "", [""]]];
+params [["_candidates", [], [[]]]];
 
 private _segments = [];
 private _objs = [];
 
-private _hoverPoints = allMissionObjects "GLT_Trials_HoverPoint";
 {
-    private _sid = _x getVariable ["GLT_Trials_trialId", ""];
-    if !(_sid isEqualTo _trialId) then { continue };
+    if (isNull _x) then { continue };
+    if !(_x isKindOf "GLT_Trials_HoverPoint") then { continue };
     _objs pushBack _x;
 
     private _segIdx = _x getVariable ["GLT_Trials_segmentIndex", 0];
@@ -40,7 +40,6 @@ private _hoverPoints = allMissionObjects "GLT_Trials_HoverPoint";
     private _dimClose = _dims select 1;
 
     _segments pushBack ["HOVER_POINT", _segIdx, _posWorld, _radius, _altMin, _altMax, _hoverSeconds, _dimFar, _dimClose];
-} forEach _hoverPoints;
+} forEach _candidates;
 
 [_segments, _objs]
-

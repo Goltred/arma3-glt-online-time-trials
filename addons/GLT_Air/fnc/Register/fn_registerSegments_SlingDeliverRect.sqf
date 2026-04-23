@@ -1,17 +1,17 @@
 /*
     GLT_Trials_fnc_registerSegments_SlingDeliverRect
+    Params: [_candidates] — objects synchronized to the Trial Definition (filtered here by type).
     Returns: [segments, courseObjs]
 */
 
-params [["_trialId", "", [""]]];
+params [["_candidates", [], [[]]]];
 
 private _segments = [];
 private _objs = [];
 
-private _slingRect = allMissionObjects "GLT_Trials_SlingDeliverRect";
 {
-    private _sid = _x getVariable ["GLT_Trials_trialId", ""];
-    if !(_sid isEqualTo _trialId) then { continue };
+    if (isNull _x) then { continue };
+    if !(_x isKindOf "GLT_Trials_SlingDeliverRect") then { continue };
 
     // Rectangle helper arrow is an editor gizmo only; keep it hidden at runtime.
     _x setVariable ["GLT_Trials_runtimeAlwaysHidden", true, true];
@@ -35,7 +35,6 @@ private _slingRect = allMissionObjects "GLT_Trials_SlingDeliverRect";
 
     // ["SLING_DELIVER_RECT", segIdx, posASL, axisR, axisF, halfW, halfL, dimFar, dimClose]
     _segments pushBack ["SLING_DELIVER_RECT", _segIdx, _posWorld, _r, _f, _halfW, _halfL, _dimFar, _dimClose];
-} forEach _slingRect;
+} forEach _candidates;
 
 [_segments, _objs]
-

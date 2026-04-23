@@ -23,7 +23,8 @@ private _trialId = _run get "trialId";
 private _trial = GLT_Trials_trialsById getOrDefault [_trialId, nil];
 if (isNil "_trial") exitWith { _run set ["didFinish", false]; true };
 
-private _segments = _trial select 9;
+private _tcSegments = 9; // same as _trialConfig in fn_registerTrial.sqf
+private _segments = _trial select _tcSegments;
 private _segmentIndex = _run get "segmentIndex";
 
 private _posWorld = getPosWorld _heli;
@@ -215,7 +216,7 @@ if (_segmentIndex < 0 || { _segmentIndex >= count _segments }) then {
                 private _inZone = [_posC, _seg] call GLT_Trials_fnc_pointInSlingDeliveryZone;
                 private _sl = getSlingLoad _heli;
                 private _onHook = (!isNull _sl && {_sl == _cargo}) || {
-                    (_cargo getVariable ["PTF_RopesAttached", 0] > 0)
+                    (_cargo getVariable ["GLT_Trials_cargoRopesAttached", 0] > 0)
                 };
                 if (_inZone && {!_onHook}) then {
                     _segmentCompleted = true;

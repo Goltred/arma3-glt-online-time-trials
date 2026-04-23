@@ -3,10 +3,9 @@ class CfgVehicles
     class Logic;
     class Land_MultiScreenComputer_01_black_F;
     class Sign_Arrow_Direction_Green_F;
-    class Sign_Arrow_Large_Green_F;
 
-    // Editor-only helper: holds trial name, vehicle whitelist, category toggles. Removed from world after registerTrial.
-    class GLT_Trials_TrialMeta : Sign_Arrow_Large_Green_F
+    // Editor-only helper: holds trial name, vehicle whitelist, category toggles. Logic parent so Eden Connections / sync work reliably.
+    class GLT_Trials_TrialMeta : Logic
     {
         scope = 2;
         editorCategory = "GLT_Trials";

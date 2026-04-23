@@ -1,9 +1,10 @@
-build/
-.sconsign.dblite
-buildTools/
-docs/
-*.pbo
 @GLT_OnlineTimeTrials/
-*.biprivatekey
-tools/build.local.json
+build/
 dist/
+tools/
+.sconsign.dblite
+*.pbo
+*.bisign
+*.biprivatekey
+.cursor/
+AGENTS.md

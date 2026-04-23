@@ -85,15 +85,9 @@ if (isNil "GLT_Trials_trials") exitWith {
 };
 
 // Look up start position + radius for this trial (from public summary array).
-private _startPos = [];
-private _startRadius = 0;
-{
-    private _tid = _x select 0;
-    if (_tid isEqualTo _trialId) exitWith {
-        _startPos = _x select 3;
-        _startRadius = _x select 4;
-    };
-} forEach GLT_Trials_trials;
+private _trialRow = [_trialId] call GLT_Trials_fnc_findPublicTrialRowById;
+private _startPos = _trialRow param [3, []];
+private _startRadius = _trialRow param [4, 0];
 
 // If we don't know start position/radius, fall back to old behavior.
 if (!(_startPos isEqualType []) || { count _startPos < 3 }) exitWith {
@@ -107,14 +101,7 @@ if (!(_startPos isEqualType []) || { count _startPos < 3 }) exitWith {
 _disp closeDisplay 0;
 
 // Full route on map; highlight first waypoint until server row arrives.
-private _mapRoute = [];
-private _trialRow = [];
-{
-    if ((_x select 0) isEqualTo _trialId) exitWith {
-        _trialRow = _x;
-        _mapRoute = _x param [7, []];
-    };
-} forEach GLT_Trials_trials;
+private _mapRoute = _trialRow param [7, []];
 if ((count _mapRoute) isEqualTo 0) then {
     private _fp = if ((count _trialRow) > 0) then { _trialRow param [6, _startPos] } else { +_startPos };
     if (!(_fp isEqualType []) || { count _fp < 3 }) then { _fp = +_startPos };
