@@ -117,9 +117,3 @@ If nothing appears: wait until trials have synced from the server; you must be [
 [b]Author:[/b] Goltred (Online Time Trials / GLT)
 
 --- END PASTE -----------------------------------------------------------------
-
-Notes for you (not for Steam)
-------------------------------
-- Replace [IMAGE_PLACEHOLDER: ...] with actual Steam media: upload images/video in the Workshop item and drag them into the description where Steam allows, or delete those lines.
-- Shorten or expand any section to fit Steam’s style; keep BBCode balanced ([h1]...[/h1]).
-- Update “Requirements” if you publish a CUP-free or optional-ACE variant later.
